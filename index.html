@@ -503,9 +503,9 @@
   // ---------- partie ----------
   var D = null, fl = [], caught = 0, vies = 0, fautes = 0, tLeft = 0, tAcc = 0, last = 0, pause = false, fini = false, raf = 0, pts = 0, prises = [];
   var elNiv = document.getElementById("nivTxt"), elCnt = document.getElementById("cnt"), elVies = document.getElementById("vies"), elEt = document.getElementById("etHud"), elChrono = document.getElementById("chrono"), elBarre = document.getElementById("chronoBarre"), fx = document.getElementById("effets");
-  var MAN = { x: .53, y: .185 }, FEM = { x: .46, y: .80 };
+  var MAN = { x: .53, y: .265 }, FEM = { x: .46, y: .80 };
   // ---------- personnages animés ----------
-  var persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
+  var MAN_DY = 105, persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
   function fondJeu(on) { phoneEl.style.backgroundImage = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")'; fondEl.style.backgroundImage = 'url("' + (on ? "img/fond_jeu.webp" : "img/fond.webp") + '")'; }
   function bx(x) { return (x - .146 * 640) / (.708 * 640) * W; }
   function by(y) { return (y - .059 * 1133) / (.884 * 1133) * H; }
@@ -515,9 +515,9 @@
     if (enJeu && !fini) for (var i = 0; i < fl.length; i++) { var f = fl[i]; if (f.st === 0 && f.t < tmin) { tmin = f.t; cible = (f.x1 - FEM.x) * W * .35; } }
     femDx += (cible - femDx) * Math.min(1, dt * 4);
     if (persoMan.complete && persoMan.naturalWidth) {
-      var mx = bx(234 + 103), my = by(106 + 236), k = kickM, s = 1 + .012 * Math.sin(tPerso * 2.1) + .05 * k;
+      var mx = bx(234 + 103), my = by(106 + 236 + MAN_DY), k = kickM, s = 1 + .012 * Math.sin(tPerso * 2.1) + .05 * k;
       ctx.save(); ctx.translate(mx, my); ctx.rotate(.012 * Math.sin(tPerso * 1.7) - .05 * k * Math.sin(tPerso * 30)); ctx.scale(s, s - .03 * k);
-      ctx.drawImage(persoMan, bx(234) - mx, by(106) - my, bx(234 + 207) - bx(234), by(106 + 243) - by(106)); ctx.restore();
+      ctx.drawImage(persoMan, bx(234) - mx, by(106 + MAN_DY) - my, bx(234 + 207) - bx(234), by(106 + 243) - by(106)); ctx.restore();
     }
     if (persoFem.complete && persoFem.naturalWidth) {
       var fx = bx(129 + 184) + femDx, fy = by(1070), sc = FEM_ECH * (1 + .012 * Math.sin(tPerso * 2.4 + 1) + .05 * kickF);
