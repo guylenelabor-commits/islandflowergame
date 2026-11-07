@@ -181,6 +181,12 @@
   #jeu.sur-accueil .son { right: auto; left: 5cqw; bottom: 3cqw; }
   .bulle { font-size: 5.4cqw; }
   .voile.acc::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 21cqw; background: linear-gradient(#ffe8ef 0 70%, rgba(255,232,239,0)); pointer-events: none; }
+  .vies .ch { font-size: 3.6cqw; letter-spacing: .5cqw; color: #ffe9a8; }
+  .grillef { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw; margin: 2cqw 0; }
+  .fi { border: 0; border-radius: 3cqw; background: #fff; padding: 1.5cqw; font: inherit; font-size: 3.4cqw; font-weight: 700; color: #7a2a4a; display: flex; flex-direction: column; align-items: center; gap: 1cqw; }
+  .fi img { width: 100%; border-radius: 2cqw; }
+  .fi.vide { opacity: .45; }
+  .mini.don { padding: 1cqw 2cqw; }
 </style>
 </head>
 <body>
@@ -403,7 +409,7 @@
   sonBtn.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
   sonBtn.onclick = function (e) { e.stopPropagation(); sonOn = !sonOn; ecrire("son", sonOn); majSon(); if (sonOn) musStart(); else musStop(); bip(660, .08); };
   majSon();
-  function afficher(html, acc) { jeuEl.classList.toggle("sur-accueil", !!acc); voile.className = acc ? "voile acc" : "voile"; voile.hidden = false; voile.innerHTML = '<div class="carte">' + html + '</div>'; }
+  function afficher(html, acc) { surSansVies = false; jeuEl.classList.toggle("sur-accueil", !!acc); voile.className = acc ? "voile acc" : "voile"; voile.hidden = false; voile.innerHTML = '<div class="carte">' + html + '</div>'; }
   function renderTexts() { majSon(); voile.dir = lang === "ar" ? "rtl" : "ltr"; document.documentElement.lang = lang; }
   function boutonRetour(f) { var b = document.getElementById("ret"); if (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); (f || accueil)(); }; } }
   var invite = null;
@@ -422,13 +428,15 @@
     afficher('<h1 class="titre">Island Flower Game</h1><button class="gros-bouton" id="jouer" type="button">' + t("play") + '</button>' +
       '<button class="second" id="moncompte" type="button">' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
       '<div class="rang2"><button class="second" id="malangue" type="button">' + icone("terre") + echap(cur) + '</button><button class="second" id="mesamis" type="button">' + icone("amis") + t("friends") + '</button></div>' +
-      '<div class="infos">' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
+      '<button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + ' (' + nbFiches() + ')</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
       (dejaInstalle() ? '' : '<button class="install" id="installer" type="button">' + icone("tel") + t("install") + '</button>'), true);
     var bi = document.getElementById("installer");
     if (bi) { bi.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); bi.onclick = function (e) { e.stopPropagation(); installer(); }; }
     document.getElementById("jouer").onclick = function (e) { e.stopPropagation(); bip(520, .08); presentation(); };
     document.getElementById("moncompte").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranCompte("connexion"); };
     document.getElementById("malangue").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranLangue(); };
+    document.getElementById("mesfiches").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranFiches(); };
+    chargerVies();
     document.getElementById("mesamis").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranAmis(); };
   }
   function ecranLangue() {
@@ -493,7 +501,7 @@
     function classement() {
       sb.rpc("flowers_ranking").then(function (r) {
         var z = document.getElementById("clas"); if (!z || r.error || !r.data) return;
-        z.innerHTML = r.data.map(function (x, i) { return '<div class="frow' + (x.is_me ? ' moi' : '') + '"><span>' + (i + 1) + '. ' + echap(x.username) + (x.is_me ? ' (' + t("you") + ')' : '') + '</span><b>★ ' + x.etoiles + ' · ' + t("level", { n: x.niveau }) + '</b></div>'; }).join("");
+        z.innerHTML = r.data.map(function (x, i) { return '<div class="frow' + (x.is_me ? ' moi' : '') + '"><span>' + (i + 1) + '. ' + echap(x.username) + (x.is_me ? ' (' + t("you") + ')' : '') + '</span><b>★ ' + x.etoiles + ' · ' + t("level", { n: x.niveau }) + '</b>' + (x.is_me ? '' : '<button class="mini don" data-u="' + echap(x.username) + '" type="button">❤️</button>') + '</div>'; }).join(""); liensDons(z);
       }, function () {});
     }
     classement();
@@ -533,11 +541,11 @@
     else if (n >= EPINES_DES) { st = Math.min(3, Math.floor((n - EPINES_DES) / 30)); var sh = "T" + (st + 1); d.kinds = BQ[sh][(n - 1) % 5][0]; d.src = "img/b_" + sh + "_" + ((n - 1) % 5) + ".webp"; }
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
     d.thorn = n >= EPINES_DES;
-    d.need = d.gift ? 8 : Math.min(12, 5 + Math.floor((n - 1) / 15));
-    d.time = Math.max(12, Math.round(22 - n * 0.04));
-    d.every = Math.max(.4, .8 - n * 0.002);
-    d.chute = Math.max(1.2, 2.2 - n * 0.004);
-    d.pT = Math.max(.3, .5 - n * .0008);
+    d.need = d.gift ? 8 : Math.min(12, 5 + Math.floor((n - 1) / 40));
+    d.time = Math.max(14, Math.round(23 - n * 0.03));
+    d.every = Math.max(.42, .82 - n * 0.0013);
+    d.chute = Math.max(1.25, 2.3 - n * 0.0035);
+    d.pT = Math.max(.3, .5 - n * .0007);
     d.pSpike = n >= PIQUANTES_DES ? Math.min(.35, .14 + (n - PIQUANTES_DES) * .0015) : 0;
     d.vies = n >= VIES_DES ? 5 : 0;
     return d;
@@ -593,7 +601,7 @@
   }
   function majHud() {
     elNiv.textContent = t("lvlShort", { n: D.n }); elCnt.textContent = caught + "/" + D.need; elEt.textContent = "★ " + etTotal();
-    elVies.textContent = D.vies ? new Array(vies + 1).join("❤️") + new Array(D.vies - vies + 1).join("🤍") : "";
+    elVies.innerHTML = "❤️ " + viesTotal() + (D.vies ? '<br><span class="ch">' + new Array(vies + 1).join("●") + new Array(D.vies - vies + 1).join("○") + '</span>' : "");
   }
   function bulle(txt, cls, x, y) {
     var b = document.createElement("div"); b.className = "bulle " + cls; b.textContent = txt;
@@ -652,7 +660,14 @@
       }
       if (f.st === 0 && f.t > .82) a = Math.max(0, 1 - (f.t - .82) / .18);
       ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(rot); ctx.scale(s, s);
-      ctx.shadowColor = "rgba(255,238,160,.95)"; ctx.shadowBlur = 14;
+      if (f.st === 0 && !f.spike && matche(f.k, D.kinds)) {
+        var pu = .75 + .25 * Math.sin(tPerso * 6 + i * 1.7), rr = Math.max(w, h) * .78, gr = ctx.createRadialGradient(0, 0, rr * .15, 0, 0, rr);
+        gr.addColorStop(0, "rgba(255,244,170," + (.75 * pu) + ")"); gr.addColorStop(.55, "rgba(255,214,90," + (.38 * pu) + ")"); gr.addColorStop(1, "rgba(255,200,60,0)");
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, rr, 0, 6.2832); ctx.fill();
+        ctx.shadowColor = "rgba(255,225,110,1)"; ctx.shadowBlur = 30 * pu; ctx.drawImage(f.im, -w / 2, -h / 2, w, h);
+        ctx.shadowBlur = 12; ctx.drawImage(f.im, -w / 2, -h / 2, w, h); ctx.restore(); continue;
+      }
+      ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 5;
       ctx.drawImage(f.im, -w / 2, -h / 2, w, h); ctx.restore();
     }
   }
@@ -688,19 +703,79 @@
     return t("bqName", { n: D.kinds.map(function (k) { return nomKind(k, false); }).join(" + ") });
   }
 
-  function compoTxt() { var nm = D.kinds.map(function (k) { return k === "rose:rouge" ? t("fn01") : nomKind(k, true); }).join(", "); return t("compo", { n: nm + ", " + t("compoRest") }); }
+  function compoTxt(d) { d = d || D; var nm = d.kinds.map(function (k) { return k === "rose:rouge" ? t("fn01") : nomKind(k, true); }).join(", "); return t("compo", { n: nm + ", " + t("compoRest") }); }
   function lignes(c, txt, maxW) { var mots = txt.split(" "), ls = [], cur = ""; mots.forEach(function (m) { var tst = cur ? cur + " " + m : m; if (c.measureText(tst).width > maxW && cur) { ls.push(cur); cur = m; } else cur = tst; }); if (cur) ls.push(cur); return ls; }
-  function telechargerFiche() {
-    var im = img("img/real_" + pad(D.gift) + ".webp"), c = document.createElement("canvas"), W2 = 840, H2 = 1290; c.width = W2; c.height = H2;
-    var x = c.getContext("2d"); x.fillStyle = "#fdf6ec"; x.fillRect(0, 0, W2, H2); x.strokeStyle = "#c2406e"; x.lineWidth = 10; x.strokeRect(20, 20, W2 - 40, H2 - 40);
-    x.direction = lang === "ar" ? "rtl" : "ltr"; x.textAlign = "center"; x.fillStyle = "#c2406e"; x.font = "bold 46px sans-serif";
-    var y = 120; lignes(x, t("gift"), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 62; });
-    var iw = 600, ih = Math.round(iw * (im.naturalHeight || 500) / (im.naturalWidth || 420)); x.drawImage(im, (W2 - iw) / 2, y + 10, iw, ih); y += ih + 70;
-    x.fillStyle = "#4a2a3a"; x.font = "bold 40px sans-serif"; x.fillText(t("level", { n: D.n }), W2 / 2, y); y += 56;
-    x.font = "36px sans-serif"; lignes(x, compoTxt(), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 48; });
-    x.fillStyle = "#c2406e"; x.font = "bold 32px sans-serif"; x.fillText("Island Flower Game", W2 / 2, H2 - 60);
-    c.toBlob(function (b) { var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "bouquet-" + pad(D.gift) + ".png"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }, "image/png");
+  function telechargerFiche(g) {
+    g = g || D.gift; var d = defNiveau(g * 30), im = img("img/real_" + pad(g) + ".webp");
+    function go() {
+      var c = document.createElement("canvas"), W2 = 840, H2 = 1290; c.width = W2; c.height = H2;
+      var x = c.getContext("2d"); x.fillStyle = "#fdf6ec"; x.fillRect(0, 0, W2, H2); x.strokeStyle = "#c2406e"; x.lineWidth = 10; x.strokeRect(20, 20, W2 - 40, H2 - 40);
+      x.direction = lang === "ar" ? "rtl" : "ltr"; x.textAlign = "center"; x.fillStyle = "#c2406e"; x.font = "bold 46px sans-serif";
+      var y = 120; lignes(x, t("gift"), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 62; });
+      var iw = 600, ih = Math.round(iw * (im.naturalHeight || 500) / (im.naturalWidth || 420)); x.drawImage(im, (W2 - iw) / 2, y + 10, iw, ih); y += ih + 70;
+      x.fillStyle = "#4a2a3a"; x.font = "bold 40px sans-serif"; x.fillText(t("level", { n: d.n }), W2 / 2, y); y += 56;
+      x.font = "36px sans-serif"; lignes(x, compoTxt(d), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 48; });
+      x.fillStyle = "#c2406e"; x.font = "bold 32px sans-serif"; x.fillText("Island Flower Game", W2 / 2, H2 - 60);
+      c.toBlob(function (b) {
+        if (!b) return; var nom = "bouquet-" + pad(g) + ".png";
+        try { var f = new File([b], nom, { type: "image/png" }); if (navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f] }).catch(function () {}); return; } } catch (e) {}
+        var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nom; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      }, "image/png");
+    }
+    if (im.complete && im.naturalWidth) go(); else { im.onload = go; im.onerror = go; }
   }
+  function nbFiches() { return Math.min(CADEAUX.length, Math.floor((niveau - 1) / 30)); }
+  function ecranFiches() {
+    var n = nbFiches(), h = '<h2>📜 ' + t("fiches") + '</h2>';
+    if (!n) h += '<p>' + t("noFiche") + '</p>';
+    h += '<div class="grillef">';
+    for (var g = 1; g <= CADEAUX.length; g++) {
+      if (g <= n) h += '<button class="fi" type="button" data-g="' + g + '"><img alt="" src="img/real_' + pad(g) + '.webp"><span>' + t("level", { n: g * 30 }) + ' ⬇</span></button>';
+      else h += '<div class="fi vide"><img alt="" src="img/real_' + pad(g) + '.webp"><span>🔒 ' + t("level", { n: g * 30 }) + '</span></div>';
+    }
+    h += '</div><button class="slien" id="ret" type="button">' + t("home") + '</button>';
+    afficher(h); voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0; boutonRetour();
+    document.querySelectorAll(".fi[data-g]").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(parseInt(b.getAttribute("data-g"), 10)); }; });
+  }
+  // ---------- vies ----------
+  var LIEN3 = "https://buy.stripe.com/fZu4gzb1ccdx9ff7GegjC0p", LIEN20 = "https://buy.stripe.com/4gMbJ1c5gb9tbnne4CgjC0q";
+  var viesJ = { daily: 5, bonus: 0 }, surSansVies = false;
+  function jourGP() { return new Date(Date.now() - 4 * 3600e3).toISOString().slice(0, 10); }
+  function viesInvite() { var v = lire("viesJ", null); if (!v || v.day !== jourGP()) v = { day: jourGP(), daily: 5 }; ecrire("viesJ", v); return v; }
+  function viesTotal() { return viesJ.daily + viesJ.bonus; }
+  function prendVies(r) { if (r && r.data && typeof r.data.daily === "number") viesJ = { daily: r.data.daily, bonus: r.data.bonus || 0 }; }
+  function majVieTxt() { var e = document.getElementById("vp"); if (e) e.textContent = t("vLeft", { n: viesTotal() }); }
+  function chargerVies(cb) {
+    if (sb && session) sb.rpc("get_my_flower_lives").then(function (r) { prendVies(r); majVieTxt(); cb && cb(); }, function () { cb && cb(); });
+    else { var v = viesInvite(); viesJ = { daily: v.daily, bonus: 0 }; majVieTxt(); cb && cb(); }
+  }
+  function depenserVie(cb) {
+    if (sb && session) sb.rpc("spend_my_flower_life").then(function (r) { if (r.error || !r.data) { if (viesJ.daily > 0) viesJ.daily--; else if (viesJ.bonus > 0) viesJ.bonus--; } else prendVies(r); majVieTxt(); cb && cb(); }, function () { if (viesJ.daily > 0) viesJ.daily--; else if (viesJ.bonus > 0) viesJ.bonus--; majVieTxt(); cb && cb(); });
+    else { var v = viesInvite(); v.daily = Math.max(0, v.daily - 1); ecrire("viesJ", v); viesJ = { daily: v.daily, bonus: 0 }; majVieTxt(); cb && cb(); }
+  }
+  function ecranSansVies() {
+    var h = '<h2>💔 ' + t("vNone") + '</h2><p>' + t("vDaily") + '</p>';
+    if (sb && session) h += '<button class="gros-bouton" id="ach3" type="button">' + t("vBuy3") + '</button><button class="gros-bouton" id="ach20" type="button">' + t("vBuy20") + '</button><p class="petit">' + t("vWait") + '</p>';
+    else h += '<p>' + t("vNeedAcc") + '</p><button class="gros-bouton" id="lg" type="button">' + t("login") + '</button>';
+    h += '<button class="mini" id="mesamis2" type="button">' + t("friends") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>';
+    afficher(h); surSansVies = true; boutonRetour();
+    ["ach3", "ach20", "lg", "mesamis2"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
+    function ouvre(l) { return function (e) { e.stopPropagation(); bip(660, .08); window.open(l + "?client_reference_id=" + encodeURIComponent(session.user.id), "_blank"); }; }
+    var a3 = document.getElementById("ach3"); if (a3) a3.onclick = ouvre(LIEN3);
+    var a20 = document.getElementById("ach20"); if (a20) a20.onclick = ouvre(LIEN20);
+    var lg = document.getElementById("lg"); if (lg) lg.onclick = function (e) { e.stopPropagation(); ecranCompte("connexion"); };
+    document.getElementById("mesamis2").onclick = function (e) { e.stopPropagation(); ecranAmis(); };
+  }
+  function liensDons(z) {
+    z.querySelectorAll(".don").forEach(function (b) {
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+      b.onclick = function (e) {
+        e.stopPropagation(); var u = b.getAttribute("data-u"), m = document.getElementById("amsg");
+        sb.rpc("send_flower_life", { p_username: u }).then(function (r) { if (!m) return; if (r.data === true) { m.style.color = "#2a7d1e"; m.textContent = t("vSent", { u: u }); b.disabled = true; b.style.opacity = .4; } else { m.style.color = ""; m.textContent = t("vSentAlready"); } }, function () {});
+      };
+    });
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) return; chargerVies(function () { if (surSansVies && viesTotal() > 0) { surSansVies = false; presentation(D ? D.n : undefined); } }); });
   function fin() { fini = true; enJeu = false; elChrono.hidden = true; }
   function gagne() {
     if (fini) return; var r = tLeft / D.time, sauve = 0;
@@ -718,17 +793,17 @@
       afficher((D.gift ? '<h2>' + t("gift") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(compoTxt()) + '</div><button class="second" id="dlf" type="button">⬇ ' + t("dl") + '</button>' : '<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
         (dernier ? '<h1 style="font-size:7cqw">🌸 300 / 300 🌸</h1>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
         '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
-      var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(); }; }
+      var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(D.gift); }; }
       var s = document.getElementById("suiv"); if (s) { s.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); s.onclick = function (e) { e.stopPropagation(); bip(660, .08); presentation(Math.min(MAXN, D.n + 1)); }; }
       boutonRetour();
     }, 650);
   }
   function perdu(raison) {
-    if (fini) return; fin(); bip(220, .4, "sawtooth", .07, 90);
+    if (fini) return; fin(); bip(220, .4, "sawtooth", .07, 90); depenserVie();
     setTimeout(function () {
       hud.hidden = true;
-      afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2><img class="bqimg" alt="" src="' + D.src + '" style="opacity:.55"><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
-      var b = document.getElementById("rej"); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); presentation(D.n); };
+      afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2><img class="bqimg" alt="" src="' + D.src + '" style="opacity:.55"><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
+      var b = document.getElementById("rej"); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); if (viesTotal() <= 0) ecranSansVies(); else presentation(D.n); };
       boutonRetour();
     }, 450);
   }
@@ -738,9 +813,10 @@
     if (D.tout) noms = t("bqAll");
     afficher('<h2>' + t("level", { n: n }) + '</h2><img class="bqimg" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
       '<p class="petit">' + t("tipGame") + '</p>' + (n >= VIES_DES ? '<p class="petit">' + t("tipLife") + '</p>' : '') + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
-      '<p class="petit">' + t("secs", { t: D.time }) + '</p><button class="gros-bouton" id="go" type="button">' + t("go") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
+      '<p class="petit">' + t("secs", { t: D.time }) + '</p><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="go" type="button">' + t("go") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
     boutonRetour();
-    var g = document.getElementById("go"); g.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); g.onclick = function (e) { e.stopPropagation(); bip(660, .08); demarrer(); };
+    var g = document.getElementById("go"); g.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); g.onclick = function (e) { e.stopPropagation(); if (viesTotal() <= 0) { ecranSansVies(); return; } bip(660, .08); demarrer(); };
+    chargerVies();
   }
   function demarrer() {
     caught = 0; fautes = 0; prises = []; vies = D.vies; tLeft = D.time; tAcc = D.every * .6; fini = false; pause = false; enJeu = true; fl = [];
