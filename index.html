@@ -443,7 +443,7 @@
     afficher('<button class="gros-bouton" id="jouer" type="button">' + t("play") + '</button>' +
       '<button class="second" id="moncompte" type="button">' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
       '<div class="rang2"><button class="second" id="malangue" type="button">' + icone("terre") + echap(cur) + '</button><button class="second" id="mesamis" type="button">' + icone("amis") + t("friends") + '</button></div>' +
-      '<button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + '</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
+      '<button class="second" id="monmenu" type="button">☰ ' + t("menu") + '</button><button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + '</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
       (dejaInstalle() ? '' : '<button class="install" id="installer" type="button">' + icone("tel") + t("install") + '</button>'), true);
     voile.insertAdjacentHTML("afterbegin", "<h1 class=\"titre\" aria-label=\"Island Flower Game\"><svg viewBox=\"0 0 300 140\" aria-hidden=\"true\"><defs><linearGradient id=\"gd\" x1=\"0\" x2=\"1\"><stop offset=\"0\" stop-color=\"#ffc400\"/><stop offset=\".5\" stop-color=\"#ff5fae\"/><stop offset=\"1\" stop-color=\"#ffc400\"/></linearGradient><path id=\"arc\" d=\"M 46 134 A 104 104 0 0 1 254 134\"/></defs><text font-size=\"30\" font-weight=\"800\" text-anchor=\"middle\" fill=\"url(#gd)\" stroke=\"#7a2a4a\" stroke-width=\"2\" paint-order=\"stroke\" letter-spacing=\"1\"><textPath href=\"#arc\" startOffset=\"50%\">Island Flower Game</textPath></text></svg></h1>");
     var bi = document.getElementById("installer");
@@ -451,6 +451,7 @@
     document.getElementById("jouer").onclick = function (e) { e.stopPropagation(); bip(520, .08); presentation(); };
     document.getElementById("moncompte").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranCompte("connexion"); };
     document.getElementById("malangue").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranLangue(); };
+    document.getElementById("monmenu").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranMenu(); };
     document.getElementById("mesfiches").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranFiches(); };
     chargerVies();
     document.getElementById("mesamis").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranAmis(); };
@@ -829,6 +830,19 @@
         afficher('<h2>' + t("pwNewT") + '</h2><p>' + t("pwSaved") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour();
       }, function () { er.textContent = t("eGeneric"); });
     };
+  }
+  // ---------- menu (comme Island Kitchen Game) ----------
+  function ecranMenu() {
+    var cur = LANGS.filter(function (l) { return l[0] === lang; })[0][1];
+    afficher('<button class="retourK" id="ret" type="button">' + t("back") + '</button><h2>☰ ' + t("menu") + '</h2>' +
+      '<button class="gros-bouton" id="mlang" type="button">🌍 ' + echap(cur) + '</button>' +
+      (sb && session ? '<p><b>' + echap(pseudo) + '</b></p><button class="gros-bouton" id="mmdp" type="button">🔑 ' + t("pwNewT") + '</button><button class="slien" id="mdeco" type="button">' + t("logout") + '</button>'
+        : '<button class="gros-bouton" id="mlog" type="button">' + t("login") + '</button>') +
+      '<h2>' + t("howTitle") + '</h2><p class="petit">• ' + t("tipGame") + '</p><p class="petit">• ' + t("vDaily") + '</p><p class="petit">• ' + t("noFiche") + '</p>');
+    boutonRetour();
+    function b(id, f) { var x = document.getElementById(id); if (x) { x.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); x.onclick = function (e) { e.stopPropagation(); bip(520, .08); f(); }; } }
+    b("mlang", ecranLangue); b("mmdp", ecranNouveauMdp); b("mlog", function () { ecranCompte("connexion"); });
+    b("mdeco", function () { sb.auth.signOut().then(function () { session = null; pseudo = ""; monCode = ""; accueil(); }, function () { accueil(); }); });
   }
   // ---------- vies ----------
   var LIEN3 = "https://buy.stripe.com/fZu4gzb1ccdx9ff7GegjC0p", LIEN20 = "https://buy.stripe.com/4gMbJ1c5gb9tbnne4CgjC0q";
