@@ -611,7 +611,7 @@
       if (tAcc >= D.every) { tAcc = 0; spawn(); }
       for (var i = fl.length - 1; i >= 0; i--) {
         var f = fl[i];
-        if (f.st === 0) { f.t += dt / f.D; f.rot += f.spin * dt; if (f.t >= 1) fl.splice(i, 1); }
+        if (f.st === 0) { f.t += dt / f.D; f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
         else { f.ct += dt / .38; if (f.ct >= 1) fl.splice(i, 1); }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
@@ -664,6 +664,9 @@
       f.ok = true; kickF = 1; caught++; prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
       if (caught >= D.need) gagne();
     } else { f.ok = false; fautes++; piquer(p, false); }
+  }
+  function rate(p) {
+    if (fini || !enJeu) return; bip(190, .22, "sawtooth", .07, 110); fautes++; vies--; majHud(); bulle("💔", "non", p.x, Math.min(p.y, H * .9)); if (vies <= 0) perdu("vies");
   }
   function piquer(p, pique) {
     hurtF = 1;
