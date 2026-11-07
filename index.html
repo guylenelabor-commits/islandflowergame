@@ -689,12 +689,18 @@
         var pu = .75 + .25 * Math.sin(tPerso * 6 + i * 1.7), rr = Math.max(w, h) * .78, gr = ctx.createRadialGradient(0, 0, rr * .15, 0, 0, rr);
         gr.addColorStop(0, "rgba(255,244,170," + (.75 * pu) + ")"); gr.addColorStop(.55, "rgba(255,214,90," + (.38 * pu) + ")"); gr.addColorStop(1, "rgba(255,200,60,0)");
         ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, rr, 0, 6.2832); ctx.fill();
-        ctx.shadowColor = "rgba(255,225,110,1)"; ctx.shadowBlur = 30 * pu; ctx.drawImage(f.im, -w / 2, -h / 2, w, h);
-        ctx.shadowBlur = 12; ctx.drawImage(f.im, -w / 2, -h / 2, w, h); ctx.restore(); continue;
+        var lu = lueur(f.im), m = lu.m * w / lu.w0; ctx.globalAlpha = a * (.7 + .3 * pu); ctx.drawImage(lu.c, -w / 2 - m, -h / 2 - m * h / w, w + 2 * m, h + 2 * m * h / w); ctx.globalAlpha = a;
+        ctx.drawImage(f.im, -w / 2, -h / 2, w, h); ctx.restore(); continue;
       }
-      ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 5;
       ctx.drawImage(f.im, -w / 2, -h / 2, w, h); ctx.restore();
     }
+  }
+  // halo doré préparé une seule fois par image (plus léger pour les petits appareils)
+  function lueur(im) {
+    if (im._lu) return im._lu;
+    var w0 = 120, h0 = Math.round(w0 * im.naturalHeight / im.naturalWidth), m = 30, c = document.createElement("canvas"); c.width = w0 + 2 * m; c.height = h0 + 2 * m;
+    var x = c.getContext("2d"); x.shadowColor = "rgba(255,225,110,1)"; x.shadowBlur = 22; x.drawImage(im, m, m, w0, h0); x.shadowBlur = 10; x.drawImage(im, m, m, w0, h0);
+    im._lu = { c: c, m: m, w0: w0 }; return im._lu;
   }
   function toucher(e) {
     if (!enJeu || pause || fini) return;
