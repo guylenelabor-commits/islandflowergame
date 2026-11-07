@@ -1,0 +1,16 @@
+{
+  "name": "Island Flower Game",
+  "short_name": "Island Flower",
+  "description": "Attrape les fleurs et compose 300 bouquets.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#c2406e",
+  "theme_color": "#c2406e",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
