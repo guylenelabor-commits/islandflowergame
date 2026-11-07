@@ -200,6 +200,8 @@
   .fiche h4 { margin: 2.4cqw 0 0; font-size: 4.4cqw; color: #c2406e; }
   .fiche p, .fiche li { font-size: 3.9cqw; line-height: 1.45; margin: 0; }
   .fiche ul { margin: 0; padding-inline-start: 5cqw; }
+  .retourK { position: sticky; top: 0; align-self: flex-end; margin: -2cqw -2cqw 0 0; z-index: 3; border: 0; border-radius: 4cqw; background: #e8402f; color: #fff; font: inherit; font-size: 3.8cqw; font-weight: 800; padding: 1.8cqw 3.2cqw; box-shadow: 0 .6cqw 0 #a82a1d; }
+  [dir="rtl"] .retourK { align-self: flex-start; }
 </style>
 </head>
 <body>
@@ -761,8 +763,7 @@
   // la fiche gagnée s'ouvre d'abord en grand ; ensuite elle se range dans « Mes fiches »
   function montrerFiche(g, ensuite) {
     chargeFiches(function (d) {
-      afficher('<h2>🎁 ' + t("gift") + '</h2>' + htmlFiche(d, g) + '<button class="second" id="dlf3" type="button">⬇ ' + t("dl") + '</button>' +
-        '<button class="gros-bouton" id="range" type="button">' + echap(d ? d.labels.retour : t("next")) + '</button>');
+      afficher('<button class="retourK" id="range" type="button">' + t("back") + '</button><h2>🎁 ' + t("gift") + '</h2>' + htmlFiche(d, g) + '<button class="gros-bouton" id="dlf3" type="button">⬇ ' + t("dl") + '</button>');
       voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0;
       ["dlf3", "range"].forEach(function (id) { document.getElementById(id).addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
       document.getElementById("dlf3").onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(g); };
@@ -788,14 +789,13 @@
   function ecranFiches(sel) {
     var n = nbFiches();
     chargeFiches(function (d) {
-      var h = '<h2>📜 ' + t("fiches") + '</h2>';
+      var h = '<button class="retourK" id="ret" type="button">' + t("back") + '</button><h2>📜 ' + t("fiches") + '</h2>';
       if (!n) h += '<p>' + t("noFiche") + '</p>';
       else {
         sel = Math.min(n, Math.max(1, sel || n)); var opts = "";
         for (var g = 1; g <= n; g++) opts += '<option value="' + g + '"' + (g === sel ? ' selected' : '') + '>' + echap((d && d.f[g - 1] ? d.f[g - 1].nom + " · " : "") + t("level", { n: g * 30 })) + '</option>';
         h += '<select id="chfi" class="chfi">' + opts + '</select>' + htmlFiche(d, sel) + '<button class="gros-bouton" id="dlf2" type="button">⬇ ' + t("dl") + '</button>';
       }
-      h += '<button class="slien" id="ret" type="button">' + t("home") + '</button>';
       afficher(h); voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0; boutonRetour();
       var sl = document.getElementById("chfi"); if (sl) { sl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); sl.onchange = function () { ecranFiches(parseInt(sl.value, 10)); }; }
       var dl = document.getElementById("dlf2"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(sel); }; }
