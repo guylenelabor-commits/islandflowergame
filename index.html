@@ -799,7 +799,7 @@
     }, 650);
   }
   function perdu(raison) {
-    if (fini) return; fin(); bip(220, .4, "sawtooth", .07, 90); depenserVie();
+    if (fini) return; fin(); bip(220, .4, "sawtooth", .07, 90); if (raison !== "vies") depenserVie();
     setTimeout(function () {
       hud.hidden = true;
       afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2><img class="bqimg" alt="" src="' + D.src + '" style="opacity:.55"><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
