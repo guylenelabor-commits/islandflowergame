@@ -187,6 +187,7 @@
   .fi img { width: 100%; border-radius: 2cqw; }
   .fi.vide { opacity: .45; }
   .mini.don { padding: 1cqw 2cqw; }
+  .chfi { width: 100%; box-sizing: border-box; border: .6cqw solid #c2406e; border-radius: 3cqw; padding: 2cqw; font: inherit; font-size: 4cqw; font-weight: 700; color: #7a2a4a; background: #fff; margin: 1cqw 0 2cqw; }
 </style>
 </head>
 <body>
@@ -428,7 +429,7 @@
     afficher('<h1 class="titre">Island Flower Game</h1><button class="gros-bouton" id="jouer" type="button">' + t("play") + '</button>' +
       '<button class="second" id="moncompte" type="button">' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
       '<div class="rang2"><button class="second" id="malangue" type="button">' + icone("terre") + echap(cur) + '</button><button class="second" id="mesamis" type="button">' + icone("amis") + t("friends") + '</button></div>' +
-      '<button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + ' (' + nbFiches() + ')</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
+      '<button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + ' ' + nbFiches() + '/' + CADEAUX.length + '</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
       (dejaInstalle() ? '' : '<button class="install" id="installer" type="button">' + icone("tel") + t("install") + '</button>'), true);
     var bi = document.getElementById("installer");
     if (bi) { bi.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); bi.onclick = function (e) { e.stopPropagation(); installer(); }; }
@@ -729,17 +730,20 @@
     if (im.complete && im.naturalWidth) go(); else { im.onload = go; im.onerror = go; }
   }
   function nbFiches() { return Math.min(CADEAUX.length, Math.floor((niveau - 1) / 30)); }
-  function ecranFiches() {
-    var n = nbFiches(), h = '<h2>📜 ' + t("fiches") + '</h2>';
+  function ecranFiches(sel) {
+    var n = nbFiches(), h = '<h2>📜 ' + t("fiches") + ' ' + n + '/' + CADEAUX.length + '</h2>';
     if (!n) h += '<p>' + t("noFiche") + '</p>';
-    h += '<div class="grillef">';
-    for (var g = 1; g <= CADEAUX.length; g++) {
-      if (g <= n) h += '<button class="fi" type="button" data-g="' + g + '"><img alt="" src="img/real_' + pad(g) + '.webp"><span>' + t("level", { n: g * 30 }) + ' ⬇</span></button>';
-      else h += '<div class="fi vide"><img alt="" src="img/real_' + pad(g) + '.webp"><span>🔒 ' + t("level", { n: g * 30 }) + '</span></div>';
+    else {
+      sel = Math.min(n, Math.max(1, sel || n));
+      var d = defNiveau(sel * 30), opts = "";
+      for (var g = 1; g <= n; g++) opts += '<option value="' + g + '"' + (g === sel ? ' selected' : '') + '>' + echap(t("level", { n: g * 30 })) + '</option>';
+      h += '<select id="chfi" class="chfi">' + opts + '</select><img class="bqimg" alt="" src="img/real_' + pad(sel) + '.webp"><div class="nomBq">' + echap(compoTxt(d)) + '</div>' +
+        '<button class="gros-bouton" id="dlf2" type="button">⬇ ' + t("dl") + '</button>';
     }
-    h += '</div><button class="slien" id="ret" type="button">' + t("home") + '</button>';
+    h += '<button class="slien" id="ret" type="button">' + t("home") + '</button>';
     afficher(h); voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0; boutonRetour();
-    document.querySelectorAll(".fi[data-g]").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(parseInt(b.getAttribute("data-g"), 10)); }; });
+    var sl = document.getElementById("chfi"); if (sl) { sl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); sl.onchange = function () { ecranFiches(parseInt(sl.value, 10)); }; }
+    var dl = document.getElementById("dlf2"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(sel); }; }
   }
   // ---------- vies ----------
   var LIEN3 = "https://buy.stripe.com/fZu4gzb1ccdx9ff7GegjC0p", LIEN20 = "https://buy.stripe.com/4gMbJ1c5gb9tbnne4CgjC0q";
