@@ -192,6 +192,14 @@
   .voile.acc > .titre { position: absolute; left: 0; right: 0; top: 3cqw; margin: 0; padding: 0; text-shadow: none; pointer-events: none; z-index: 2; }
   .voile.acc > .titre svg { display: block; width: 100%; margin: 0 auto; overflow: visible; filter: drop-shadow(0 .5cqw .6cqw rgba(90,20,60,.5)); }
   .voile.acc .install { bottom: -72cqw; }
+  .carte:has(.fiche) { max-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .fiche { width: 100%; text-align: start; display: flex; flex-direction: column; align-items: stretch; gap: 1.2cqw; }
+  .fiche .bqimg { align-self: center; }
+  .fiche h3 { margin: 1cqw 0 0; text-align: center; font-family: var(--display); font-size: 7cqw; color: #c2406e; }
+  .fiche .fniv { text-align: center; font-size: 3.6cqw; color: #8a4b62; font-weight: 700; }
+  .fiche h4 { margin: 2.4cqw 0 0; font-size: 4.4cqw; color: #c2406e; }
+  .fiche p, .fiche li { font-size: 3.9cqw; line-height: 1.45; margin: 0; }
+  .fiche ul { margin: 0; padding-inline-start: 5cqw; }
 </style>
 </head>
 <body>
@@ -553,7 +561,7 @@
     d.chute = Math.max(1.3, 3.2 - n * 0.0065);
     d.pT = Math.max(.3, .5 - n * .0007);
     d.pSpike = n >= PIQUANTES_DES ? Math.min(.35, .14 + (n - PIQUANTES_DES) * .0015) : 0;
-    d.every = Math.min(d.every, d.time / (d.need * 2.5)); d.pT = Math.min(.75, Math.max(d.pT, d.need * 1.7 * d.every / d.time));
+    d.every = Math.min(d.every, d.time / (d.need * 2.5)); var offre = 1.6 - .25 * Math.min(1, (n - 1) / 299); d.pT = Math.min(.8, Math.max(.2, d.need * offre * d.every / d.time));
     d.vies = n >= VIES_DES ? 5 : 0;
     return d;
   }
@@ -726,40 +734,65 @@
 
   function compoTxt(d) { d = d || D; var nm = d.kinds.map(function (k) { return k === "rose:rouge" ? t("fn01") : nomKind(k, true); }).join(", "); return t("compo", { n: nm + ", " + t("compoRest") }); }
   function lignes(c, txt, maxW) { var mots = txt.split(" "), ls = [], cur = ""; mots.forEach(function (m) { var tst = cur ? cur + " " + m : m; if (c.measureText(tst).width > maxW && cur) { ls.push(cur); cur = m; } else cur = tst; }); if (cur) ls.push(cur); return ls; }
+  // ---------- fiches des bouquets (histoire, où elle pousse, entretien, parfum, allergies) ----------
+  var FICHES = {};
+  function chargeFiches(cb) {
+    var l = FICHES[lang] ? lang : null; if (l) { cb(FICHES[l]); return; }
+    fetch("fiches/" + lang + ".json").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) { FICHES[lang] = d; cb(d); })
+      .catch(function () { if (lang !== "en" && !FICHES.en) fetch("fiches/en.json").then(function (r) { return r.json(); }).then(function (d) { FICHES.en = d; cb(d); }).catch(function () { cb(null); }); else cb(FICHES.en || null); });
+  }
+  function htmlFiche(d, g) {
+    var f = d && d.f[g - 1]; if (!f) return '<img class="bqimg" alt="" src="img/real_' + pad(g) + '.webp"><div class="nomBq">' + echap(compoTxt(defNiveau(g * 30))) + '</div>';
+    var L = d.labels;
+    return '<div class="fiche"><img class="bqimg" alt="" src="img/real_' + pad(g) + '.webp"><h3>' + echap(f.nom) + '</h3><div class="fniv">' + echap(t("level", { n: g * 30 })) + '</div>' +
+      '<h4>' + echap(L.histoire) + '</h4><p>' + echap(f.histoire) + '</p>' +
+      '<h4>' + echap(L.pousse) + '</h4><p>' + echap(f.pousse) + '</p>' +
+      '<h4>' + echap(L.entretien) + '</h4><ul>' + f.entretien.map(function (x) { return '<li>' + echap(x) + '</li>'; }).join("") + '</ul>' +
+      '<h4>' + echap(L.parfum) + '</h4><p>' + echap(f.parfum) + '</p>' +
+      '<h4>' + echap(L.allergenes) + '</h4><p>' + echap(f.allergenes) + '</p></div>';
+  }
+  // la fiche gagnée s'ouvre d'abord en grand ; ensuite elle se range dans « Mes fiches »
+  function montrerFiche(g, ensuite) {
+    chargeFiches(function (d) {
+      afficher('<h2>🎁 ' + t("gift") + '</h2>' + htmlFiche(d, g) + '<button class="second" id="dlf3" type="button">⬇ ' + t("dl") + '</button>' +
+        '<button class="gros-bouton" id="range" type="button">' + echap(d ? d.labels.retour : t("next")) + '</button>');
+      voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0;
+      ["dlf3", "range"].forEach(function (id) { document.getElementById(id).addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
+      document.getElementById("dlf3").onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(g); };
+      document.getElementById("range").onclick = function (e) { e.stopPropagation(); bip(660, .08); ensuite(); };
+    });
+  }
+  // télécharger la fiche : une page avec la photo et tout le texte, lisible sans Internet
   function telechargerFiche(g) {
-    g = g || D.gift; var d = defNiveau(g * 30), im = img("img/real_" + pad(g) + ".webp");
-    function go() {
-      var c = document.createElement("canvas"), W2 = 840, H2 = 1290; c.width = W2; c.height = H2;
-      var x = c.getContext("2d"); x.fillStyle = "#fdf6ec"; x.fillRect(0, 0, W2, H2); x.strokeStyle = "#c2406e"; x.lineWidth = 10; x.strokeRect(20, 20, W2 - 40, H2 - 40);
-      x.direction = lang === "ar" ? "rtl" : "ltr"; x.textAlign = "center"; x.fillStyle = "#c2406e"; x.font = "bold 46px sans-serif";
-      var y = 120; lignes(x, t("gift"), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 62; });
-      var iw = 600, ih = Math.round(iw * (im.naturalHeight || 500) / (im.naturalWidth || 420)); x.drawImage(im, (W2 - iw) / 2, y + 10, iw, ih); y += ih + 70;
-      x.fillStyle = "#4a2a3a"; x.font = "bold 40px sans-serif"; x.fillText(t("level", { n: d.n }), W2 / 2, y); y += 56;
-      x.font = "36px sans-serif"; lignes(x, compoTxt(d), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 48; });
-      x.fillStyle = "#c2406e"; x.font = "bold 32px sans-serif"; x.fillText("Island Flower Game", W2 / 2, H2 - 60);
-      c.toBlob(function (b) {
-        if (!b) return; var nom = "bouquet-" + pad(g) + ".png";
-        try { var f = new File([b], nom, { type: "image/png" }); if (navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f] }).catch(function () {}); return; } } catch (e) {}
-        var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nom; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-      }, "image/png");
-    }
-    if (im.complete && im.naturalWidth) go(); else { im.onload = go; im.onerror = go; }
+    chargeFiches(function (d) {
+      var f = d && d.f[g - 1], dir = lang === "ar" ? "rtl" : "ltr", nom = f ? f.nom : "bouquet " + g;
+      function faire(photo) {
+        var L = d ? d.labels : {}, corps = f ? '<h2>' + echap(L.histoire) + '</h2><p>' + echap(f.histoire) + '</p><h2>' + echap(L.pousse) + '</h2><p>' + echap(f.pousse) + '</p><h2>' + echap(L.entretien) + '</h2><ul>' + f.entretien.map(function (x) { return '<li>' + echap(x) + '</li>'; }).join("") + '</ul><h2>' + echap(L.parfum) + '</h2><p>' + echap(f.parfum) + '</p><h2>' + echap(L.allergenes) + '</h2><p>' + echap(f.allergenes) + '</p>' : "";
+        var page = '<!doctype html><html lang="' + lang + '" dir="' + dir + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + echap(nom) + '</title>' +
+          '<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:24px auto;padding:0 16px;color:#4a2a3a;background:#fdf6ec}img{width:100%;max-width:420px;display:block;margin:0 auto 12px;border-radius:20px}h1{color:#c2406e;margin:0 0 4px;text-align:center}h2{color:#c2406e;margin-top:22px}li{margin:6px 0;line-height:1.4}p{line-height:1.5}.m{text-align:center;color:#8a4b62}.f{margin-top:30px;font-size:13px;color:#8a4b62;text-align:center}</style></head><body>' +
+          (photo ? '<img src="' + photo + '" alt="">' : "") + '<h1>' + echap(nom) + '</h1><p class="m">' + echap(t("level", { n: g * 30 })) + '</p>' + corps + '<p class="f">Island Flower Game</p></body></html>';
+        var url = URL.createObjectURL(new Blob([page], { type: "text/html;charset=utf-8" })), a = document.createElement("a");
+        a.href = url; a.download = String(nom).replace(/[\\/:*?"<>|]+/g, " ").trim() + ".html"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      }
+      fetch("img/real_" + pad(g) + ".webp").then(function (x) { if (!x.ok) throw 0; return x.blob(); }).then(function (b) { var fr = new FileReader(); fr.onload = function () { faire(fr.result); }; fr.onerror = function () { faire(""); }; fr.readAsDataURL(b); }).catch(function () { faire(""); });
+    });
   }
   function nbFiches() { return Math.min(CADEAUX.length, Math.floor((niveau - 1) / 30)); }
   function ecranFiches(sel) {
-    var n = nbFiches(), h = '<h2>📜 ' + t("fiches") + '</h2>';
-    if (!n) h += '<p>' + t("noFiche") + '</p>';
-    else {
-      sel = Math.min(n, Math.max(1, sel || n));
-      var d = defNiveau(sel * 30), opts = "";
-      for (var g = 1; g <= n; g++) opts += '<option value="' + g + '"' + (g === sel ? ' selected' : '') + '>' + echap(t("level", { n: g * 30 })) + '</option>';
-      h += '<select id="chfi" class="chfi">' + opts + '</select><img class="bqimg" alt="" src="img/real_' + pad(sel) + '.webp"><div class="nomBq">' + echap(compoTxt(d)) + '</div>' +
-        '<button class="gros-bouton" id="dlf2" type="button">⬇ ' + t("dl") + '</button>';
-    }
-    h += '<button class="slien" id="ret" type="button">' + t("home") + '</button>';
-    afficher(h); voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0; boutonRetour();
-    var sl = document.getElementById("chfi"); if (sl) { sl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); sl.onchange = function () { ecranFiches(parseInt(sl.value, 10)); }; }
-    var dl = document.getElementById("dlf2"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(sel); }; }
+    var n = nbFiches();
+    chargeFiches(function (d) {
+      var h = '<h2>📜 ' + t("fiches") + '</h2>';
+      if (!n) h += '<p>' + t("noFiche") + '</p>';
+      else {
+        sel = Math.min(n, Math.max(1, sel || n)); var opts = "";
+        for (var g = 1; g <= n; g++) opts += '<option value="' + g + '"' + (g === sel ? ' selected' : '') + '>' + echap((d && d.f[g - 1] ? d.f[g - 1].nom + " · " : "") + t("level", { n: g * 30 })) + '</option>';
+        h += '<select id="chfi" class="chfi">' + opts + '</select>' + htmlFiche(d, sel) + '<button class="gros-bouton" id="dlf2" type="button">⬇ ' + t("dl") + '</button>';
+      }
+      h += '<button class="slien" id="ret" type="button">' + t("home") + '</button>';
+      afficher(h); voile.scrollTop = 0; var ca = voile.querySelector(".carte"); if (ca) ca.scrollTop = 0; boutonRetour();
+      var sl = document.getElementById("chfi"); if (sl) { sl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); sl.onchange = function () { ecranFiches(parseInt(sl.value, 10)); }; }
+      var dl = document.getElementById("dlf2"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(sel); }; }
+    });
   }
   // ---------- vies ----------
   var LIEN3 = "https://buy.stripe.com/fZu4gzb1ccdx9ff7GegjC0p", LIEN20 = "https://buy.stripe.com/4gMbJ1c5gb9tbnne4CgjC0q";
@@ -811,16 +844,17 @@
     if (D.n >= niveau) niveau = Math.min(MAXN + 1, D.n + 1); ecrire("niveau", niveau); sauveCompte();
     bip(523, .12, "triangle", .08); setTimeout(function () { bip(659, .12, "triangle", .08); }, 120); setTimeout(function () { bip(784, .2, "triangle", .08); }, 240);
     var etxt = ""; for (var i = 0; i < 3; i++) etxt += i < etoiles ? "★" : "☆";
-    setTimeout(function () {
+    setTimeout(function () { hud.hidden = true; if (D.gift) montrerFiche(D.gift, ecranGagne); else ecranGagne(); }, 650);
+    function ecranGagne() {
       hud.hidden = true;
       var dernier = D.n >= MAXN;
-      afficher((D.gift ? '<h2>' + t("gift") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(compoTxt()) + '</div><button class="second" id="dlf" type="button">⬇ ' + t("dl") + '</button>' : '<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
+      afficher((false ? '' : '<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
         (dernier ? '<p>🌸 ' + t("soon") + '</p>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
         '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
       var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(D.gift); }; }
       var s = document.getElementById("suiv"); if (s) { s.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); s.onclick = function (e) { e.stopPropagation(); bip(660, .08); presentation(Math.min(MAXN, D.n + 1)); }; }
       boutonRetour();
-    }, 650);
+    }
   }
   function perdu(raison) {
     if (fini) return; fin(); bip(220, .4, "sawtooth", .07, 90); if (raison !== "vies") depenserVie();
@@ -833,7 +867,7 @@
   }
   function presentation(n) {
     n = n || Math.min(MAXN, niveau); D = defNiveau(n); fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
-    var noms = D.kinds.map(function (k) { return nomKind(k, true); }).join(" / ");
+    var noms = D.kinds.map(function (k) { return /^f(0[2-9]|1\d|20)$/.test(k) ? t("fc" + k.slice(1)) : nomKind(k, true); }).join(" / ");
     if (D.tout) noms = t("bqAll");
     afficher('<h2>' + t("level", { n: n }) + '</h2><img class="bqimg" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
       '<p class="petit">' + t("tipGame") + '</p>' + (n >= VIES_DES ? '<p class="petit">' + t("tipLife") + '</p>' : '') + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
