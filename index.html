@@ -342,22 +342,22 @@
     var bus = c.createGain(), dry = c.createGain(), wet = c.createGain(), rev = c.createConvolver(); rev.buffer = impulse(c); dry.gain.value = .55; wet.gain.value = .9;
     bus.connect(dry); dry.connect(master); bus.connect(rev); rev.connect(wet); wet.connect(master);
     [[700, 3, .5], [1100, 4, .35], [2700, 5, .15]].forEach(function (f) { var bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f[0]; bp.Q.value = f[1]; var g = c.createGain(); g.gain.value = f[2]; bus.connect(bp); bp.connect(g); g.connect(master); });
-    mus = { master: master, bus: bus, rev: rev, idx: 0, timers: [] };
+    mus = { master: master, bus: bus, rev: rev, idx: 0, timers: [], shift: 0, oscs: [] };
   }
   function musChord(notes) {
     var c = actx, t0 = c.currentTime, T = 9;
     notes.forEach(function (m, k) {
-      var f = mf(m), vg = c.createGain(), lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400; vg.connect(lp); lp.connect(mus.bus);
+      var f = mf(m + mus.shift), vg = c.createGain(), lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400; vg.connect(lp); lp.connect(mus.bus);
       var lv = (m < 55 ? .5 : 1) * .05; vg.gain.setValueAtTime(0, t0); vg.gain.linearRampToValueAtTime(lv, t0 + 4); vg.gain.setValueAtTime(lv, t0 + T); vg.gain.linearRampToValueAtTime(0, t0 + T + 4.5);
       var lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 4.2 + Math.random(); lg.gain.value = f * .0035; lfo.connect(lg);
       [["sine", -5, 1], ["triangle", 6, .28], ["sine", 1200 / 1, 0]].slice(0, 2).forEach(function (o) {
-        var osc = c.createOscillator(), og = c.createGain(); osc.type = o[0]; osc.frequency.value = f; osc.detune.value = o[1] + (k % 2 ? 2 : -2); og.gain.value = o[2]; lg.connect(osc.frequency); osc.connect(og); og.connect(vg); osc.start(t0); osc.stop(t0 + T + 5);
+        var osc = c.createOscillator(), og = c.createGain(); osc.type = o[0]; osc.frequency.value = f; osc.detune.value = o[1] + (k % 2 ? 2 : -2); og.gain.value = o[2]; lg.connect(osc.frequency); mus.oscs.push({ o: osc, base: mf(m), end: t0 + T + 5 }); osc.connect(og); og.connect(vg); osc.start(t0); osc.stop(t0 + T + 5);
       });
       lfo.start(t0); lfo.stop(t0 + T + 5);
     });
   }
   function musBell() {
-    if (!mus || !sonOn) return; var c = actx, t0 = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = mf(PENTA[Math.floor(Math.random() * PENTA.length)]);
+    if (!mus || !sonOn) return; var c = actx, t0 = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = mf(PENTA[Math.floor(Math.random() * PENTA.length)] + mus.shift);
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.022, t0 + .08); g.gain.exponentialRampToValueAtTime(.0001, t0 + 5); o.connect(g); g.connect(mus.bus); o.start(t0); o.stop(t0 + 5.2);
   }
 
@@ -375,6 +375,14 @@
       });
     } catch (e) {}
   }
+  var sansFaute = 0;
+  function musShift(n, lent) {
+    if (!mus || !actx) return; mus.shift = n; var now = actx.currentTime;
+    mus.oscs = mus.oscs.filter(function (x) { return x.end > now; });
+    mus.oscs.forEach(function (x) { try { x.o.frequency.cancelScheduledValues(now); x.o.frequency.setTargetAtTime(x.base * Math.pow(2, n / 12), now, lent ? .9 : .3); } catch (e) {} });
+  }
+  function bonSansFaute() { sansFaute++; musShift(Math.min(14, sansFaute)); }
+  function fauteMusique() { sansFaute = 0; musShift(0, true); }
   function musStart() {
     if (!sonOn) return;
     try {
@@ -409,7 +417,7 @@
     boutonRetour();
   }
   function accueil() {
-    enJeu = false; fini = true; hud.hidden = true; elChrono.hidden = true; fl = []; cancelAnimationFrame(raf); fondJeu(false); ctx.clearRect(0, 0, W, H); renderTexts();
+    enJeu = false; fini = true; hud.hidden = true; elChrono.hidden = true; fl = []; cancelAnimationFrame(raf); fondJeu(false); fauteMusique(); ctx.clearRect(0, 0, W, H); renderTexts();
     var cur = LANGS.filter(function (l) { return l[0] === lang; })[0][1];
     afficher('<h1 class="titre">Island Flower Game</h1><button class="gros-bouton" id="jouer" type="button">' + t("play") + '</button>' +
       '<button class="second" id="moncompte" type="button">' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
@@ -661,15 +669,15 @@
     f.st = 1; f.ct = 0; f.cx = p.x; f.cy = p.y;
     if (f.spike) { f.ok = false; piquer(p, true); return; }
     if (matche(f.k, D.kinds)) {
-      f.ok = true; kickF = 1; caught++; prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
+      f.ok = true; kickF = 1; caught++; bonSansFaute(); prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
       if (caught >= D.need) gagne();
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
   function rate(p) {
-    if (fini || !enJeu) return; bip(190, .22, "sawtooth", .07, 110); fautes++; vies--; majHud(); bulle("💔", "non", p.x, Math.min(p.y, H * .9)); if (vies <= 0) perdu("vies");
+    if (fini || !enJeu) return; fauteMusique(); bip(190, .22, "sawtooth", .07, 110); fautes++; vies--; majHud(); bulle("💔", "non", p.x, Math.min(p.y, H * .9)); if (vies <= 0) perdu("vies");
   }
   function piquer(p, pique) {
-    hurtF = 1;
+    hurtF = 1; fauteMusique();
     bip(190, .22, "sawtooth", .07, 110);
     if (D.vies) { vies--; majHud(); bulle(pique ? t("ouch") : t("wrong"), "non", p.x, p.y); if (vies <= 0) { perdu("vies"); } }
     else { bulle(pique ? t("ouch") : t("wrong"), "non", p.x, p.y); }
