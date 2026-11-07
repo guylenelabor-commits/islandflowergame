@@ -465,11 +465,11 @@
     else if (n % 30 === 0) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
     d.thorn = n >= EPINES_DES;
-    d.need = Math.min(10, 5 + Math.floor((n - 1) / 20));
-    d.time = Math.max(14, Math.round(32 - n * 0.075));
-    d.every = Math.max(.5, 1.1 - n * 0.0027);
-    d.chute = Math.max(1.6, 3.2 - n * 0.0065);
-    d.pT = Math.max(.38, .66 - n * .0012);
+    d.need = Math.min(12, 5 + Math.floor((n - 1) / 15));
+    d.time = Math.max(12, Math.round(22 - n * 0.04));
+    d.every = Math.max(.4, .8 - n * 0.002);
+    d.chute = Math.max(1.2, 2.2 - n * 0.004);
+    d.pT = Math.max(.3, .5 - n * .0008);
     d.pSpike = n >= PIQUANTES_DES ? Math.min(.35, .14 + (n - PIQUANTES_DES) * .0015) : 0;
     d.vies = n >= VIES_DES ? 5 : 0;
     return d;
