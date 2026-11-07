@@ -206,7 +206,7 @@
 <script>
 (function () {
   "use strict";
-  var MAXN = 300, VIES_DES = 1, EPINES_DES = 200, PIQUANTES_DES = 250;
+  var CADEAUX = ["rose:rouge", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10"], MAXN = 300, VIES_DES = 1, EPINES_DES = 200, PIQUANTES_DES = 250;
   var ROSES = {"rouge": [1, 8, 18, 20, 32, 35, 40, 41, 43, 45, 49, 53, 61, 74, 83, 85, 92, 96, 99, 100], "blanc": [2, 27, 50, 77], "rose": [3, 9, 25, 38, 65, 68, 71, 78, 94], "jaune": [4, 23, 28, 39, 76, 87, 90], "violet": [5, 11, 19, 33, 75, 88, 97], "orange": [6, 13, 16, 17, 29, 34, 47, 56, 57, 60, 69, 79, 81, 86, 89, 93], "turquoise": [7, 14, 31, 42, 64, 98], "bleu": [12, 22, 30, 37, 46, 48, 55, 62, 72, 91, 95], "multi": [15, 21, 66], "argent": [24, 36, 80], "bordeaux": [26, 58, 63, 70], "vert": [44, 54, 59, 67, 73, 84], "noir": [51]};
   var FLEURS = []; for (var i = 2; i <= 20; i++) FLEURS.push("f" + (i < 10 ? "0" + i : i));
   var NB_PIQ = 25;
@@ -460,12 +460,12 @@
   function roseNom(g) { var s = t("roseFmt", { c: t("cl_" + g) }); return s.charAt(0).toUpperCase() + s.slice(1); }
   function defNiveau(n) {
     var d = { n: n, tout: false }, st, list, idx;
-    if (n === MAXN) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
+    if (n % 30 === 0) { d.gift = n / 30; d.kinds = [CADEAUX[d.gift - 1]]; d.src = "img/real_" + pad(d.gift) + ".webp"; }
+    else if (n === MAXN) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
     else if (n >= EPINES_DES) { st = Math.min(3, Math.floor((n - EPINES_DES) / 30)); var sh = "T" + (st + 1); d.kinds = BQ[sh][(n - 1) % 5][0]; d.src = "img/b_" + sh + "_" + ((n - 1) % 5) + ".webp"; }
-    else if (n % 30 === 0) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
     d.thorn = n >= EPINES_DES;
-    d.need = Math.min(12, 5 + Math.floor((n - 1) / 15));
+    d.need = d.gift ? 8 : Math.min(12, 5 + Math.floor((n - 1) / 15));
     d.time = Math.max(12, Math.round(22 - n * 0.04));
     d.every = Math.max(.4, .8 - n * 0.002);
     d.chute = Math.max(1.2, 2.2 - n * 0.004);
@@ -601,6 +601,20 @@
     if (D.tout) return t("bqAll");
     return t("bqName", { n: D.kinds.map(function (k) { return nomKind(k, false); }).join(" + ") });
   }
+
+  function compoTxt() { var nm = D.kinds.map(function (k) { return k === "rose:rouge" ? t("fn01") : nomKind(k, true); }).join(", "); return t("compo", { n: nm + ", " + t("compoRest") }); }
+  function lignes(c, txt, maxW) { var mots = txt.split(" "), ls = [], cur = ""; mots.forEach(function (m) { var tst = cur ? cur + " " + m : m; if (c.measureText(tst).width > maxW && cur) { ls.push(cur); cur = m; } else cur = tst; }); if (cur) ls.push(cur); return ls; }
+  function telechargerFiche() {
+    var im = img("img/real_" + pad(D.gift) + ".webp"), c = document.createElement("canvas"), W2 = 840, H2 = 1290; c.width = W2; c.height = H2;
+    var x = c.getContext("2d"); x.fillStyle = "#fdf6ec"; x.fillRect(0, 0, W2, H2); x.strokeStyle = "#c2406e"; x.lineWidth = 10; x.strokeRect(20, 20, W2 - 40, H2 - 40);
+    x.direction = lang === "ar" ? "rtl" : "ltr"; x.textAlign = "center"; x.fillStyle = "#c2406e"; x.font = "bold 46px sans-serif";
+    var y = 120; lignes(x, t("gift"), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 62; });
+    var iw = 600, ih = Math.round(iw * (im.naturalHeight || 500) / (im.naturalWidth || 420)); x.drawImage(im, (W2 - iw) / 2, y + 10, iw, ih); y += ih + 70;
+    x.fillStyle = "#4a2a3a"; x.font = "bold 40px sans-serif"; x.fillText(t("level", { n: D.n }), W2 / 2, y); y += 56;
+    x.font = "36px sans-serif"; lignes(x, compoTxt(), W2 - 140).forEach(function (l) { x.fillText(l, W2 / 2, y); y += 48; });
+    x.fillStyle = "#c2406e"; x.font = "bold 32px sans-serif"; x.fillText("Island Flower Game", W2 / 2, H2 - 60);
+    c.toBlob(function (b) { var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "bouquet-" + pad(D.gift) + ".png"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }, "image/png");
+  }
   function fin() { fini = true; enJeu = false; elChrono.hidden = true; }
   function gagne() {
     if (fini) return; var r = tLeft / D.time, sauve = 0;
@@ -615,9 +629,10 @@
     setTimeout(function () {
       hud.hidden = true;
       var dernier = D.n >= MAXN;
-      afficher('<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div><div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
+      afficher((D.gift ? '<h2>' + t("gift") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(compoTxt()) + '</div><button class="second" id="dlf" type="button">⬇ ' + t("dl") + '</button>' : '<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
         (dernier ? '<h1 style="font-size:7cqw">🌸 300 / 300 🌸</h1>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
         '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
+      var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(); }; }
       var s = document.getElementById("suiv"); if (s) { s.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); s.onclick = function (e) { e.stopPropagation(); bip(660, .08); presentation(Math.min(MAXN, D.n + 1)); }; }
       boutonRetour();
     }, 650);
