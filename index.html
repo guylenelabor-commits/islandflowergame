@@ -148,7 +148,7 @@
   body { background: #2b1a3a; }
   #fond { background: #2b1a3a center / cover no-repeat; filter: blur(16px) saturate(1.25) brightness(.8); }
   #phone { position: fixed; left: 0; top: 0; overflow: visible; border: 0; border-radius: 0; background: url("img/bg.webp") center / 100% 100% no-repeat; box-shadow: none; transform: translateZ(0); }
-  #jeu { position: absolute; left: 14.6%; top: 5.9%; width: 70.8%; height: 88.4%; border-radius: 11% / 4.4%; background: transparent; overflow: hidden; container-type: inline-size; }
+  #jeu { position: absolute; left: 6.77%; top: 2.8%; width: 86.64%; height: 94.23%; border-radius: 11% / 4.4%; background: transparent; overflow: hidden; container-type: inline-size; }
   #jeu canvas#cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .hud { position: absolute; inset: 0; pointer-events: none; display: block; padding: 0; }
   .hud > * { pointer-events: none; }
@@ -206,7 +206,7 @@
 <script>
 (function () {
   "use strict";
-  var CADEAUX = ["rose:rouge", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10"], MAXN = 300, VIES_DES = 1, EPINES_DES = 200, PIQUANTES_DES = 250;
+  var GN = 22, CADEAUX = ["rose:rouge", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10"], MAXN = 300, VIES_DES = 1, EPINES_DES = 200, PIQUANTES_DES = 250;
   var ROSES = {"rouge": [1, 8, 18, 20, 32, 35, 40, 41, 43, 45, 49, 53, 61, 74, 83, 85, 92, 96, 99, 100], "blanc": [2, 27, 50, 77], "rose": [3, 9, 25, 38, 65, 68, 71, 78, 94], "jaune": [4, 23, 28, 39, 76, 87, 90], "violet": [5, 11, 19, 33, 75, 88, 97], "orange": [6, 13, 16, 17, 29, 34, 47, 56, 57, 60, 69, 79, 81, 86, 89, 93], "turquoise": [7, 14, 31, 42, 64, 98], "bleu": [12, 22, 30, 37, 46, 48, 55, 62, 72, 91, 95], "multi": [15, 21, 66], "argent": [24, 36, 80], "bordeaux": [26, 58, 63, 70], "vert": [44, 54, 59, 67, 73, 84], "noir": [51]};
   var FLEURS = []; for (var i = 2; i <= 20; i++) FLEURS.push("f" + (i < 10 ? "0" + i : i));
   var NB_PIQ = 25;
@@ -312,12 +312,12 @@
   function cadre() {
     var VW = window.innerWidth, VH = window.innerHeight, vv = window.visualViewport ? window.visualViewport.height : 0;
     if (vv > 100 && vv < VH) VH = vv;
-    var M = VW < 600 ? 0 : 6, h = VH - 2 * M, w = Math.min(VW - 2 * M, Math.round(h * 640 / 1133)); h = Math.round(w * 1133 / 640);
+    var M = VW < 600 ? 0 : 6, h = VH - 2 * M, w = Math.min(VW - 2 * M, Math.round(h * 523 / 1063)); h = Math.round(w * 1063 / 523);
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
     phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round((VH - h) / 2) + "px";
     taille();
   }
-  fondEl.style.backgroundImage = 'url("img/bg.webp")';
+  fondEl.style.backgroundImage = 'url("img/fond.webp")';
   window.addEventListener("resize", cadre); cadre();
   // ---------- sons ----------
   var actx = null;
@@ -455,12 +455,14 @@
   function nomKind(k, tout) {
     if (k === "rose:*") return tout ? t("fn01") : roseNom("multi");
     if (k.indexOf("rose:") === 0) return roseNom(k.slice(5));
+    if (k.charAt(0) === "g") return t("fancy", { n: parseInt(k.slice(1), 10) });
     return t("fn" + k.slice(1));
   }
   function roseNom(g) { var s = t("roseFmt", { c: t("cl_" + g) }); return s.charAt(0).toUpperCase() + s.slice(1); }
   function defNiveau(n) {
     var d = { n: n, tout: false }, st, list, idx;
     if (n % 30 === 0) { d.gift = n / 30; d.kinds = [CADEAUX[d.gift - 1]]; d.src = "img/real_" + pad(d.gift) + ".webp"; }
+    else if (n >= PIQUANTES_DES) { d.kinds = ["g" + pad(1 + (n - PIQUANTES_DES) % GN)]; d.src = "img/" + d.kinds[0] + ".webp"; d.fancy = true; }
     else if (n === MAXN) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
     else if (n >= EPINES_DES) { st = Math.min(3, Math.floor((n - EPINES_DES) / 30)); var sh = "T" + (st + 1); d.kinds = BQ[sh][(n - 1) % 5][0]; d.src = "img/b_" + sh + "_" + ((n - 1) % 5) + ".webp"; }
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
@@ -481,6 +483,7 @@
       var g = k.slice(5), a = ROSES[g]; if (!a) { g = pick(Object.keys(ROSES)); a = ROSES[g]; }
       return "img/r" + pad3(pick(a)) + ".webp";
     }
+    if (k.charAt(0) === "g") return "img/" + k + ".webp";
     var num = parseInt(k.slice(1), 10);
     return thorn && THORN_OK[num] ? "img/t" + pad(num) + ".webp" : "img/f" + pad(num) + ".webp";
   }
@@ -488,6 +491,7 @@
   function kindsPossibles(d) {
     var all = [], i;
     for (i = 0; i < FLEURS.length; i++) all.push(FLEURS[i]);
+    if (d.n >= PIQUANTES_DES) for (i = 1; i <= GN; i++) all.push("g" + pad(i));
     if (d.thorn) { all.push("f01"); } else { Object.keys(ROSES).forEach(function (g) { all.push("rose:" + g); }); }
     return all;
   }
@@ -502,7 +506,7 @@
   var MAN = { x: .53, y: .185 }, FEM = { x: .46, y: .80 };
   // ---------- personnages animés ----------
   var persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
-  function fondJeu(on) { var u = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")'; phoneEl.style.backgroundImage = u; fondEl.style.backgroundImage = u; }
+  function fondJeu(on) { phoneEl.style.backgroundImage = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")'; fondEl.style.backgroundImage = 'url("' + (on ? "img/fond_jeu.webp" : "img/fond.webp") + '")'; }
   function bx(x) { return (x - .146 * 640) / (.708 * 640) * W; }
   function by(y) { return (y - .059 * 1133) / (.884 * 1133) * H; }
   function dessinePerso(dt) {
