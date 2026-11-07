@@ -587,7 +587,14 @@
   var MAN = { x: .53, y: .265 }, FEM = { x: .46, y: .80 };
   // ---------- personnages animés ----------
   var MAN_DY = 105, persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
-  function fondJeu(on) { phoneEl.style.backgroundImage = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")'; fondEl.style.backgroundImage = 'url("' + (on ? "img/fond_jeu.webp" : "img/fond.webp") + '")'; }
+  // 9 décors : un nouveau tous les 30 niveaux (1–30 : le marché d'origine), puis on recommence
+  function theme() { var k = D ? Math.floor((D.n - 1) / 30) % 10 : 0; return k ? "img/th" + pad(k) + ".webp" : ""; }
+  function fondJeu(on) {
+    var th = on ? theme() : "";
+    phoneEl.style.backgroundImage = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")';
+    fondEl.style.backgroundImage = 'url("' + (th || (on ? "img/fond_jeu.webp" : "img/fond.webp")) + '")';
+    jeuEl.style.background = th ? 'url("' + th + '") center / cover no-repeat' : "";
+  }
   function bx(x) { return (x - .146 * 640) / (.708 * 640) * W; }
   function by(y) { return (y - .059 * 1133) / (.884 * 1133) * H; }
   function dessinePerso(dt) {
