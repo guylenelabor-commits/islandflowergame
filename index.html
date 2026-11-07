@@ -467,7 +467,7 @@
     if (!sb) { afficher('<h2>' + icone("moi") + '</h2><p>' + t("unavailable") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour(); return; }
     if (session) {
       afficher('<h2>' + icone("moi") + ' ' + echap(pseudo) + '</h2><p>' + t("saved") + '</p><p class="petit">' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</p>' +
-        '<button class="gros-bouton" id="ret" type="button">' + t("back") + '</button><button class="slien" id="deco" type="button">' + t("logout") + '</button>');
+        '<button class="gros-bouton" id="ret" type="button">' + t("back") + '</button><button class="slien" id="chmdp" type="button">🔑 ' + t("pwNewT") + '</button><button class="slien" id="deco" type="button">' + t("logout") + '</button>'); document.getElementById("chmdp").onclick = function (e) { e.stopPropagation(); ecranNouveauMdp(); };
       boutonRetour();
       document.getElementById("deco").onclick = function (e) { e.stopPropagation(); sb.auth.signOut().then(function () { session = null; pseudo = ""; monCode = ""; accueil(); }, function () { accueil(); }); };
       return;
