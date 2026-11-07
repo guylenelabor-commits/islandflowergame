@@ -543,7 +543,7 @@
     d.thorn = n >= EPINES_DES;
     d.need = d.gift ? 8 : Math.min(12, 5 + Math.floor((n - 1) / 40));
     d.time = Math.max(20, Math.round(32 - n * 0.04));
-    d.every = Math.max(.45, 1.0 - n * 0.0019);
+    d.every = .9;
     d.chute = Math.max(1.3, 3.2 - n * 0.0065);
     d.pT = Math.max(.3, .5 - n * .0007);
     d.pSpike = n >= PIQUANTES_DES ? Math.min(.35, .14 + (n - PIQUANTES_DES) * .0015) : 0;
