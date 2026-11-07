@@ -689,7 +689,7 @@
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
   function rate(p) {
-    if (fini || !enJeu) return; fauteMusique(); bip(190, .22, "sawtooth", .07, 110); fautes++; vies--; majHud(); bulle("💔", "non", p.x, Math.min(p.y, H * .9)); if (vies <= 0) perdu("vies");
+    if (fini || !enJeu) return; /* fleur ratée : aucune pénalité */
   }
   function piquer(p, pique) {
     hurtF = 1; fauteMusique();
