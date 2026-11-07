@@ -799,7 +799,7 @@
       hud.hidden = true;
       var dernier = D.n >= MAXN;
       afficher((D.gift ? '<h2>' + t("gift") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(compoTxt()) + '</div><button class="second" id="dlf" type="button">⬇ ' + t("dl") + '</button>' : '<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
-        (dernier ? '<h1 style="font-size:7cqw">🌸 300 / 300 🌸</h1>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
+        (dernier ? '<p>🌸 ' + t("soon") + '</p>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
         '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
       var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(D.gift); }; }
       var s = document.getElementById("suiv"); if (s) { s.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); s.onclick = function (e) { e.stopPropagation(); bip(660, .08); presentation(Math.min(MAXN, D.n + 1)); }; }
