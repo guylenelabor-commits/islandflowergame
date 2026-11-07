@@ -307,7 +307,7 @@
   }
   if (sb) {
     sb.auth.getSession().then(function (r) { session = r.data && r.data.session; pseudo = session ? nomJoueur(session.user) : ""; if (session) synchro().then(function () { if (!enJeu && voile && !voile.hidden && voile.classList.contains("acc")) accueil(); }); }, function () {});
-    sb.auth.onAuthStateChange(function (ev, ses) { session = ses; pseudo = ses ? nomJoueur(ses.user) : ""; });
+    sb.auth.onAuthStateChange(function (ev, ses) { session = ses; pseudo = ses ? nomJoueur(ses.user) : ""; if (ev === "PASSWORD_RECOVERY") setTimeout(ecranNouveauMdp, 400); });
   }
   function messageErreur(e) {
     var m = String((e && e.message) || e || "").toLowerCase();
@@ -476,12 +476,13 @@
       '<label for="se">' + t("email") + '</label><input id="se" type="email" autocomplete="email">' +
       '<label for="sw">' + t("password") + '</label><div class="ligne"><input id="sw" type="password" autocomplete="' + (ins ? 'new-password' : 'current-password') + '"><button class="oeil" id="voir" type="button" aria-label="' + echap(t("password")) + '">' + icone("oeil") + '</button></div>' +
       '<div class="rouge" id="serr"></div><button class="gros-bouton" id="sok" type="submit">' + (ins ? t("create") : t("login")) + '</button></form>' +
-      '<button class="slien" id="sbas" type="button">' + (ins ? t("haveAcc") : t("createAcc")) + '</button><button class="slien" id="ret" type="button">' + t("back") + '</button>');
+      (ins ? '' : '<button class="slien" id="oubli" type="button">' + t("pwForgot") + '</button>') + '<button class="slien" id="sbas" type="button">' + (ins ? t("haveAcc") : t("createAcc")) + '</button><button class="slien" id="ret" type="button">' + t("back") + '</button>');
     var voir = document.getElementById("voir");
     voir.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
     voir.onclick = function (e) { e.stopPropagation(); var champ = document.getElementById("sw"), cache = champ.type === "password"; champ.type = cache ? "text" : "password"; voir.innerHTML = icone(cache ? "oeilbarre" : "oeil"); };
     ["sf", "sbas"].forEach(function (id) { document.getElementById(id).addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
     boutonRetour();
+    var ob = document.getElementById("oubli"); if (ob) { ob.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); ob.onclick = function (e) { e.stopPropagation(); ecranOubli(document.getElementById("se").value.trim()); }; }
     document.getElementById("sbas").onclick = function (e) { e.stopPropagation(); ecranCompte(ins ? "connexion" : "inscription"); };
     document.getElementById("sf").onsubmit = function (e) {
       e.preventDefault(); e.stopPropagation();
@@ -799,6 +800,35 @@
       var sl = document.getElementById("chfi"); if (sl) { sl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); sl.onchange = function () { ecranFiches(parseInt(sl.value, 10)); }; }
       var dl = document.getElementById("dlf2"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); bip(660, .08); telechargerFiche(sel); }; }
     });
+  }
+  // ---------- mot de passe oublié (comme Island Kitchen Game) ----------
+  function ecranOubli(em) {
+    afficher('<h2>' + t("pwForgot") + '</h2><form class="sform" id="fo" novalidate><label for="fe">' + t("email") + '</label><input id="fe" type="email" autocomplete="email" value="' + echap(em || "") + '">' +
+      '<div class="rouge" id="foerr"></div><button class="gros-bouton" type="submit">' + t("pwSend") + '</button></form><button class="slien" id="fob" type="button">' + t("back") + '</button>');
+    document.getElementById("fo").addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    document.getElementById("fob").onclick = function (e) { e.stopPropagation(); ecranCompte("connexion"); };
+    document.getElementById("fo").onsubmit = function (e) {
+      e.preventDefault(); e.stopPropagation(); var v = document.getElementById("fe").value.trim(), er = document.getElementById("foerr");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { er.textContent = t("eGeneric"); return; }
+      if (!sb) { er.textContent = t("eGeneric"); return; }
+      sb.auth.resetPasswordForEmail(v, { redirectTo: location.origin + "/" }).then(function (r) {
+        if (r.error && !/rate|limit/i.test(r.error.message || "")) { er.textContent = t("eGeneric"); return; }
+        afficher('<h2>' + t("pwForgot") + '</h2><p>' + t("pwSent") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour();
+      }, function () { er.textContent = t("eGeneric"); });
+    };
+  }
+  function ecranNouveauMdp() {
+    afficher('<h2>' + t("pwNewT") + '</h2><form class="sform" id="fn" novalidate><label for="fnw">' + t("password") + '</label><input id="fnw" type="password" autocomplete="new-password">' +
+      '<div class="rouge" id="fnerr"></div><button class="gros-bouton" type="submit">' + t("pwSave") + '</button></form>');
+    document.getElementById("fn").addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    document.getElementById("fn").onsubmit = function (e) {
+      e.preventDefault(); e.stopPropagation(); var v = document.getElementById("fnw").value, er = document.getElementById("fnerr");
+      if (v.length < 8) { er.textContent = t("pwShort"); return; }
+      sb.auth.updateUser({ password: v }).then(function (r) {
+        if (r.error) { er.textContent = t("eGeneric"); return; }
+        afficher('<h2>' + t("pwNewT") + '</h2><p>' + t("pwSaved") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour();
+      }, function () { er.textContent = t("eGeneric"); });
+    };
   }
   // ---------- vies ----------
   var LIEN3 = "https://buy.stripe.com/fZu4gzb1ccdx9ff7GegjC0p", LIEN20 = "https://buy.stripe.com/4gMbJ1c5gb9tbnne4CgjC0q";
