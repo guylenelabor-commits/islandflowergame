@@ -429,7 +429,7 @@
     afficher('<h1 class="titre">Island Flower Game</h1><button class="gros-bouton" id="jouer" type="button">' + t("play") + '</button>' +
       '<button class="second" id="moncompte" type="button">' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
       '<div class="rang2"><button class="second" id="malangue" type="button">' + icone("terre") + echap(cur) + '</button><button class="second" id="mesamis" type="button">' + icone("amis") + t("friends") + '</button></div>' +
-      '<button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + ' ' + nbFiches() + '/' + CADEAUX.length + '</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
+      '<button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + </button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
       (dejaInstalle() ? '' : '<button class="install" id="installer" type="button">' + icone("tel") + t("install") + '</button>'), true);
     var bi = document.getElementById("installer");
     if (bi) { bi.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); bi.onclick = function (e) { e.stopPropagation(); installer(); }; }
@@ -731,7 +731,7 @@
   }
   function nbFiches() { return Math.min(CADEAUX.length, Math.floor((niveau - 1) / 30)); }
   function ecranFiches(sel) {
-    var n = nbFiches(), h = '<h2>📜 ' + t("fiches") + ' ' + n + '/' + CADEAUX.length + '</h2>';
+    var n = nbFiches(), h = '<h2>📜 ' + t("fiches") + '</h2>';
     if (!n) h += '<p>' + t("noFiche") + '</p>';
     else {
       sel = Math.min(n, Math.max(1, sel || n));
