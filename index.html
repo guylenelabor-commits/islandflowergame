@@ -360,6 +360,21 @@
     if (!mus || !sonOn) return; var c = actx, t0 = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = mf(PENTA[Math.floor(Math.random() * PENTA.length)]);
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.022, t0 + .08); g.gain.exponentialRampToValueAtTime(.0001, t0 + 5); o.connect(g); g.connect(mus.bus); o.start(t0); o.stop(t0 + 5.2);
   }
+
+  function chime(n) {
+    if (!sonOn) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume();
+      var sc = [74, 76, 78, 81, 83, 86, 88, 90], m = sc[n % sc.length], t0 = actx.currentTime;
+      [[0, m, .09], [.09, m + 12, .05]].forEach(function (nt) {
+        [[1, 1], [2.01, .3], [3.02, .1]].forEach(function (h) {
+          var o = actx.createOscillator(), g = actx.createGain(), f = mf(nt[1]) * h[0]; o.type = "sine"; o.frequency.value = f;
+          g.gain.setValueAtTime(0, t0 + nt[0]); g.gain.linearRampToValueAtTime(nt[2] * h[1], t0 + nt[0] + .015); g.gain.exponentialRampToValueAtTime(.0001, t0 + nt[0] + .7);
+          o.connect(g); g.connect(mus && mus.bus ? mus.bus : actx.destination); if (mus && mus.bus) g.connect(actx.destination); o.start(t0 + nt[0]); o.stop(t0 + nt[0] + .75);
+        });
+      });
+    } catch (e) {}
+  }
   function musStart() {
     if (!sonOn) return;
     try {
@@ -646,7 +661,7 @@
     f.st = 1; f.ct = 0; f.cx = p.x; f.cy = p.y;
     if (f.spike) { f.ok = false; piquer(p, true); return; }
     if (matche(f.k, D.kinds)) {
-      f.ok = true; kickF = 1; caught++; prises.push(f.k); bip(700 + caught * 40, .12, "triangle", .08, 1100); bulle("+1", "oui", p.x, p.y); majHud();
+      f.ok = true; kickF = 1; caught++; prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
       if (caught >= D.need) gagne();
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
