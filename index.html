@@ -548,7 +548,7 @@
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
     d.thorn = n >= EPINES_DES;
     d.need = n <= 50 ? 5 + Math.floor(3 * (n - 1) / 49) : n < 60 ? 8 : n < 90 ? 9 : n < 100 ? 10 : n < 130 ? 12 : n < 160 ? 13 : n < 190 ? 16 : n < 200 ? 19 : 20; if (d.gift) d.need = Math.max(8, d.need);
-    d.time = Math.max(20, Math.round(32 - n * 0.04));
+    d.time = Math.max(20, Math.round(32 - n * 0.04)) + Math.round((d.need - 5) * 1.5);
     d.every = .9;
     d.chute = Math.max(1.3, 3.2 - n * 0.0065);
     d.pT = Math.max(.3, .5 - n * .0007);
