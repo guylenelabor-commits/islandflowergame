@@ -308,7 +308,7 @@
     }, function () {});
   }
   if (sb) {
-  function majBtnMenu() { var m = document.getElementById("monmenu"); if (m && m.parentNode && m.parentNode.id !== "admBox" && /^☰/.test(m.textContent)) m.textContent = "☰ " + (session ? pseudo : t("menu")); }
+  function majBtnMenu() { var mc = document.getElementById("moncompte"); if (mc) mc.style.display = session ? "none" : ""; var m = document.getElementById("monmenu"); if (m && m.parentNode && m.parentNode.id !== "admBox" && /^☰/.test(m.textContent)) m.textContent = "☰ " + (session ? pseudo : t("menu")); }
     sb.auth.getSession().then(function (r) { session = r.data && r.data.session; pseudo = session ? nomJoueur(session.user) : ""; majBtnMenu(); if (session) synchro().then(function () { if (!enJeu && voile && !voile.hidden && voile.classList.contains("acc")) accueil(); }); }, function () {});
     sb.auth.onAuthStateChange(function (ev, ses) { session = ses; pseudo = ses ? nomJoueur(ses.user) : ""; majBtnMenu(); if (ev === "PASSWORD_RECOVERY") setTimeout(ecranNouveauMdp, 400); });
   }
@@ -444,7 +444,7 @@
     enJeu = false; fini = true; hud.hidden = true; elChrono.hidden = true; fl = []; cancelAnimationFrame(raf); fondJeu(false); fauteMusique(); ctx.clearRect(0, 0, W, H); renderTexts();
     var cur = LANGS.filter(function (l) { return l[0] === lang; })[0][1];
     afficher('<button class="gros-bouton" id="jouer" type="button">' + t("play") + '</button>' +
-      '<button class="second" id="moncompte" type="button">' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
+      '<button class="second" id="moncompte" type="button"' + (session ? ' style="display:none"' : '') + '>' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
       '<div class="rang2"><button class="second" id="malangue" type="button">' + icone("terre") + echap(cur) + '</button><button class="second" id="mesamis" type="button">' + icone("amis") + t("friends") + '</button></div>' +
       '<button class="second" id="monmenu" type="button">☰ ' + (session ? echap(pseudo) : t("menu")) + '</button><button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + '</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
       (dejaInstalle() ? '' : '<button class="install" id="installer" type="button">' + icone("tel") + t("install") + '</button>'), true);
