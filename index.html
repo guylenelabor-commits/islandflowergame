@@ -623,7 +623,7 @@
   var elNiv = document.getElementById("nivTxt"), elCnt = document.getElementById("cnt"), elVies = document.getElementById("vies"), elEt = document.getElementById("etHud"), elChrono = document.getElementById("chrono"), elBarre = document.getElementById("chronoBarre"), fx = document.getElementById("effets");
   var MAN = { x: .53, y: .265 }, FEM = { x: .46, y: .80 };
   // ---------- personnages animés ----------
-  var MAN_DY = 105, persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
+  var MAN_DY = 105, persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), FEMS = [1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return img("img/fem" + i + ".webp"); }), femV = 0, kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
   // 9 décors : un nouveau tous les 30 niveaux (1–30 : le marché d'origine), puis on recommence
   function theme() { var k = D ? Math.floor((D.n - 1) / 30) % 10 : 0; return k ? "img/th" + pad(k) + ".webp" : ""; }
   function fondJeu(on) {
@@ -637,14 +637,21 @@
   function dessinePerso(dt) {
     tPerso += dt; kickM = Math.max(0, kickM - dt * 3); kickF = Math.max(0, kickF - dt * 2.6); hurtF = Math.max(0, hurtF - dt * 3);
     var cible = 0, tmin = 9;
-    if (enJeu && !fini) for (var i = 0; i < fl.length; i++) { var f = fl[i]; if (f.st === 0 && f.t < tmin) { tmin = f.t; cible = (f.x1 - FEM.x) * W * .35; } }
-    femDx += (cible - femDx) * Math.min(1, dt * 4);
+    if (enJeu && !fini) for (var i = 0; i < fl.length; i++) { var f = fl[i]; if (f.st === 0 && f.t < tmin) { tmin = f.t; cible = (f.x1 - FEM.x) * W * .8; } }   // 8 nov. : elle court vraiment sous la fleur
+    cible = Math.max(-W * .33, Math.min(W * .33, cible));
+    var avant = femDx; femDx += (cible - femDx) * Math.min(1, dt * 3.2); femV = dt > 0 ? (femDx - avant) / dt : 0;
     if (persoMan.complete && persoMan.naturalWidth) {
       var mx = bx(234 + 103), my = by(106 + 236 + MAN_DY), k = kickM, s = 1 + .012 * Math.sin(tPerso * 2.1) + .05 * k;
       ctx.save(); ctx.translate(mx, my); ctx.rotate(.012 * Math.sin(tPerso * 1.7) - .05 * k * Math.sin(tPerso * 30)); ctx.scale(s, s - .03 * k);
       ctx.drawImage(persoMan, bx(234) - mx, by(106 + MAN_DY) - my, bx(234 + 207) - bx(234), by(106 + 243) - by(106)); ctx.restore();
     }
-    if (persoFem.complete && persoFem.naturalWidth) {
+    var pose = kickF > .3 ? 7 : Math.abs(femV) > W * .08 ? (femV < 0 ? 0 : 1) : (tmin < .7 ? (cible < femDx - W * .02 ? 5 : cible > femDx + W * .02 ? 6 : 3) : (enJeu && !fini ? 2 : 4));   // 8 nov. : 8 poses de la jardinière (courir, tendre les bras, sauter, se réjouir)
+    var FI = FEMS[pose];
+    if (FI && FI.complete && FI.naturalWidth) {
+      var fhh = (by(1070) - by(700)) * FEM_ECH * .95, fww = fhh * FI.naturalWidth / FI.naturalHeight, bob = Math.abs(femV) > W * .08 ? Math.abs(Math.sin(tPerso * 14)) * H * .008 : 0;
+      ctx.save(); ctx.translate(bx(129 + 184) + femDx + Math.sin(tPerso * 45) * hurtF * W * .012, by(1070) - bob - kickF * H * .012);
+      ctx.drawImage(FI, -fww / 2, -fhh, fww, fhh); ctx.restore();
+    } else if (persoFem.complete && persoFem.naturalWidth) {
       var fx = bx(129 + 184) + femDx, fy = by(1070), sc = FEM_ECH * (1 + .012 * Math.sin(tPerso * 2.4 + 1) + .05 * kickF);
       ctx.save(); ctx.translate(fx + Math.sin(tPerso * 45) * hurtF * W * .012, fy - kickF * H * .012); ctx.rotate(.015 * Math.sin(tPerso * 1.9) + femDx / W * .25); ctx.scale(sc, sc * (1 - .02 * hurtF));
       ctx.drawImage(persoFem, bx(129) - bx(129 + 184), by(700) - by(1070), bx(129 + 369) - bx(129), by(1070) - by(700)); ctx.restore();

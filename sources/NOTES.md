@@ -1,0 +1,1 @@
+- 8 nov. : la jardinière a 8 poses (img/fem1..fem8.webp : court à gauche, court à droite, bras ouverts, saute, debout, tend la main à gauche, à droite, bras levés) ; elle court vraiment sous la fleur la plus proche.
