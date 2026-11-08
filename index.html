@@ -437,7 +437,8 @@
   function installer() {
     if (invite) { var iv = invite; invite = null; iv.prompt(); iv.userChoice.then(function () { accueil(); }, function () {}); return; }
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    afficher('<h2>' + icone("tel") + '</h2><p>' + t(ios ? "iosTip" : "andTip") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>');
+    var pc = (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? null : (lang === "fr" ? "Sur ordinateur : clique sur l’icône d’installation (un petit écran avec une flèche) tout à droite de la barre d’adresse. Sinon : menu ⋮ de Chrome → « Diffuser, enregistrer et partager » → « Installer la page comme application »." : "On a computer: click the install icon (a small screen with an arrow) at the right end of the address bar. Otherwise: Chrome menu ⋮ → “Cast, save and share” → “Install page as app”."));
+    afficher('<h2>' + icone("tel") + '</h2><p>' + (pc || t(ios ? "iosTip" : "andTip")) + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>');
     boutonRetour();
   }
   function accueil() {
