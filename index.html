@@ -413,8 +413,8 @@
     if (!sonOn) return;
     try {
       actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume();
-      var sc = [74, 76, 78, 81, 83, 86, 88, 90], m = sc[n % sc.length], t0 = actx.currentTime;
-      [[0, m, .09], [.09, m + 12, .05]].forEach(function (nt) {
+      var sc = [74, 76, 78, 81, 83], m = sc[Math.floor(Math.random() * sc.length)], t0 = actx.currentTime;   // petite note douce, toujours dans le même registre
+      [[0, m, .045]].forEach(function (nt) {
         [[1, 1], [2.01, .3], [3.02, .1]].forEach(function (h) {
           var o = actx.createOscillator(), g = actx.createGain(), f = mf(nt[1]) * h[0]; o.type = "sine"; o.frequency.value = f;
           g.gain.setValueAtTime(0, t0 + nt[0]); g.gain.linearRampToValueAtTime(nt[2] * h[1], t0 + nt[0] + .015); g.gain.exponentialRampToValueAtTime(.0001, t0 + nt[0] + .7);
@@ -429,8 +429,8 @@
     mus.oscs = mus.oscs.filter(function (x) { return x.end > now; });
     mus.oscs.forEach(function (x) { try { x.o.frequency.cancelScheduledValues(now); x.o.frequency.setTargetAtTime(x.base * Math.pow(2, n / 12), now, lent ? .9 : .3); } catch (e) {} });
   }
-  function bonSansFaute() { sansFaute++; musShift(Math.min(14, sansFaute)); }
-  function fauteMusique() { sansFaute = 0; musShift(0, true); }
+  function bonSansFaute() { sansFaute++; }   // 8 nov. : la musique ne monte plus quand on attrape une fleur (ça stressait)
+  function fauteMusique() { sansFaute = 0; }
   function musStart() {
     if (!sonOn) return;
     try {
@@ -440,7 +440,7 @@
         mus.timers.push(setInterval(function () { if (!sonOn || document.hidden) return; musChord(CHORDS[mus.idx % CHORDS.length]); mus.idx++; }, 12000));
         mus.timers.push(setInterval(function () { if (!document.hidden && Math.random() < .7) musBell(); }, 1700));
       }
-      mus.master.gain.cancelScheduledValues(actx.currentTime); mus.master.gain.setTargetAtTime(.9, actx.currentTime, 1.5);
+      mus.master.gain.cancelScheduledValues(actx.currentTime); mus.master.gain.setTargetAtTime(.6, actx.currentTime, 1.5);
     } catch (e) {}
   }
   function musStop() { try { if (mus) { mus.master.gain.cancelScheduledValues(actx.currentTime); mus.master.gain.setTargetAtTime(0, actx.currentTime, .4); } } catch (e) {} }

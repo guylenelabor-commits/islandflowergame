@@ -9,3 +9,4 @@
 - Fleurs à attraper : 20 couleurs × 10 fleurs (img/fl/<couleur>-01..10.webp). À chaque niveau, une seule couleur : les 10 fleurs de cette couleur sont les bonnes, mélangées avec les anciennes fleurs du jeu (les mauvaises). Ordre des couleurs (revient tous les 20 niveaux) : rouge, jaune, bleu, rose, blanc, orange, violet, vert, turquoise, corail, lilas, ambre (doré), bleu foncé, menthe, pêche, bordeaux, émeraude, lavande, irisé, nacre. L'écran du niveau montre les 10 fleurs.
 - Musique (8 nov.) : plus de « voix » (filtres de voyelles et vibrato retirés). Nappe douce et grave + petites notes de harpe calmes sur l'accord. Les notes qui montent quand on attrape une fleur sont gardées.
 - Fleurs de cristal (img/nouv, dans un carré) retirées du jeu (8 nov.).
+- Musique : ne monte plus du tout quand on attrape une fleur ; petite note douce au hasard à chaque fleur ; volume baissé (8 nov.).
