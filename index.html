@@ -308,8 +308,9 @@
     }, function () {});
   }
   if (sb) {
-    sb.auth.getSession().then(function (r) { session = r.data && r.data.session; pseudo = session ? nomJoueur(session.user) : ""; if (session) synchro().then(function () { if (!enJeu && voile && !voile.hidden && voile.classList.contains("acc")) accueil(); }); }, function () {});
-    sb.auth.onAuthStateChange(function (ev, ses) { session = ses; pseudo = ses ? nomJoueur(ses.user) : ""; if (ev === "PASSWORD_RECOVERY") setTimeout(ecranNouveauMdp, 400); });
+  function majBtnMenu() { var m = document.getElementById("monmenu"); if (m && m.parentNode && m.parentNode.id !== "admBox" && /^☰/.test(m.textContent)) m.textContent = "☰ " + (session ? pseudo : t("menu")); }
+    sb.auth.getSession().then(function (r) { session = r.data && r.data.session; pseudo = session ? nomJoueur(session.user) : ""; majBtnMenu(); if (session) synchro().then(function () { if (!enJeu && voile && !voile.hidden && voile.classList.contains("acc")) accueil(); }); }, function () {});
+    sb.auth.onAuthStateChange(function (ev, ses) { session = ses; pseudo = ses ? nomJoueur(ses.user) : ""; majBtnMenu(); if (ev === "PASSWORD_RECOVERY") setTimeout(ecranNouveauMdp, 400); });
   }
   function messageErreur(e) {
     var m = String((e && e.message) || e || "").toLowerCase();
