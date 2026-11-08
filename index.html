@@ -693,7 +693,7 @@
     else { k = pick(kindsAutres(D)); src = imageDe(k, D.thorn); }
     var im = img(src), brille = false;   // 8 nov. : plus de halo doré : les bonnes fleurs ont un contour vert
     var n = D.n, der = .16 + Math.min(.34, n * .0013), va = .3 + Math.min(.5, n * .002);
-    var sx = manX, x1 = Math.max(.1, Math.min(.9, sx + (Math.random() - .5) * der)); kickM = 1; manDir = x1 < sx ? -1 : 1; fl.push({ k: k, im: im, bon: !spike && matche(k, D.kinds), spike: spike, brille: brille, wob: .012 + Math.min(.035, n * .00013), x0: sx, y0: .21, x1: x1, y1: .95, t: 0, D: D.chute * (1 - va / 2 + Math.random() * va), rot: (Math.random() - .5) * .8, spin: (Math.random() - .5) * 1.6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .26 + Math.random() * .03 });
+    var sx = manX, x1 = Math.max(.1, Math.min(.9, sx + (Math.random() - .5) * der)); kickM = 1; manDir = x1 < sx ? -1 : 1; fl.push({ k: k, im: im, bon: !spike && matche(k, D.kinds), spike: spike, brille: brille, wob: .012 + Math.min(.035, n * .00013), x0: sx, y0: .21, x1: x1, y1: .95, t: 0, D: D.chute * (1 - va / 2 + Math.random() * va), rot: (Math.random() - .5) * .8, spin: (Math.random() - .5) * 1.6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .2 + Math.random() * .02 });
     // à partir du niveau 40 : parfois une autre fleur (mauvaise) tombe en même temps
     if (!leurre && n >= 40 && Math.random() < Math.min(.35, (n - 40) * .0025)) spawn(true);
   }
@@ -704,7 +704,7 @@
   }
   function spawnTemps() {   // 8 nov. : la fleur du temps, blanche avec une horloge, rend du temps
     tFl++; var sx = manX; kickM = 1; manDir = sx > .5 ? -1 : 1;
-    fl.push({ k: "temps", tm: true, im: IM_TEMPS, spike: false, brille: true, wob: .02, x0: sx, y0: .21, x1: Math.max(.12, Math.min(.88, sx + (Math.random() - .5) * .3)), y1: .95, t: 0, D: D.chute * 1.3, rot: 0, spin: (Math.random() - .5) * .6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .24 });
+    fl.push({ k: "temps", tm: true, im: IM_TEMPS, spike: false, brille: true, wob: .02, x0: sx, y0: .21, x1: Math.max(.12, Math.min(.88, sx + (Math.random() - .5) * .3)), y1: .95, t: 0, D: D.chute * 1.3, rot: 0, spin: (Math.random() - .5) * .6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .19 });
   }
   function creditCristal() {
     if (cris.paye || !cris.got) return; cris.paye = true; var g = cris.got;
