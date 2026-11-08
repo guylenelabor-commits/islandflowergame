@@ -840,6 +840,7 @@
       e.preventDefault(); e.stopPropagation(); var v = document.getElementById("fnw").value, er = document.getElementById("fnerr");
       if (v.length < 8) { er.textContent = t("pwShort"); return; }
       sb.auth.updateUser({ password: v }).then(function (r) {
+        if (r.error && /different from the old|same_password/i.test((r.error.message || "") + (r.error.code || ""))) r = { error: null };
         if (r.error) { er.textContent = /weak|pwned|guess/i.test(r.error.message || "") ? t("pwWeak") : t("eGeneric"); return; }
         afficher('<h2>' + t("pwNewT") + '</h2><p>' + t("pwSaved") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour();
       }, function () { er.textContent = t("eGeneric"); });
