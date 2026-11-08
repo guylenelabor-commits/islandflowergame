@@ -11,3 +11,4 @@
 - Fleurs de cristal (img/nouv, dans un carré) retirées du jeu (8 nov.).
 - Musique : ne monte plus du tout quand on attrape une fleur ; petite note douce au hasard à chaque fleur ; volume baissé (8 nov.).
 - 1000 niveaux (8 nov.) : après le 300, 30 fleurs à attraper puis +1 tous les 70 niveaux (40 au 1000), 54 s + 2 s par fleur en plus. Niveaux cadeaux seulement jusqu'au 300. Serveur : save_my_flowers accepte jusqu'au niveau 1001 et 3000 étoiles.
+- Difficulté (8 nov.) : fleurs à attraper = 8 au niveau 1, +1 environ tous les 6 niveaux (20 au 77, 56 au 300), puis jusqu'à 80 au 1000. Le temps compte les fleurs du temps : sans les attraper, on n'a pas assez de temps. Il tombe à peine plus de bonnes fleurs que ce qu'il faut (30 % de plus, 45 % aux tout premiers niveaux). Testé avec un joueur automatique : niveau 77 réussi avec 11 s sur 36 s en attrapant tout, 7 s en ratant 1 fleur sur 10.

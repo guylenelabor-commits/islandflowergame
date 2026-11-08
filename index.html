@@ -593,14 +593,15 @@
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
     d.col = COULS[(n - 1) % COULS.length]; d.kinds = ["c:" + d.col]; d.tout = false;
     d.thorn = n >= EPINES_DES;
-    d.need = n <= 50 ? 5 + Math.floor(3 * (n - 1) / 49) : n < 60 ? 8 : n < 90 ? 9 : n < 100 ? 10 : n < 130 ? 12 : n < 160 ? 13 : n < 190 ? 16 : n < 200 ? 19 : 20 + 3 * Math.floor((n - 200) / 30); if (d.gift) d.need = Math.max(8, d.need);
-    d.time = Math.max(20, Math.round(32 - n * 0.04)) + Math.round((d.need - 5) * 1.5); if (n >= 200) d.time = 44 + 3 * Math.floor((n - 200) / 30); d.need += 4; if (n === 300) d.need = 30;
-    if (n > 300) { d.need = Math.min(40, 30 + Math.floor((n - 300) / 70)); d.time = 54 + 2 * (d.need - 30); }   // 8 nov. : 1000 niveaux
+    // 8 nov. : jeu beaucoup plus dur : plus de fleurs à attraper et juste assez de temps (il faut presque toutes les attraper)
+    d.need = n <= 300 ? Math.round(8 + (n - 1) * .16) : Math.round(56 + (n - 300) * .035); if (d.gift) d.need = Math.max(8, d.need);
+    var bonusT = 1 + .2 * (n >= 200 ? 3 : n >= 100 ? 2 : 1);   // le temps rendu par les fleurs du temps est compté : sans elles, on n'a pas assez de temps
+    d.time = Math.round(d.need * (2.2 - .9 * Math.min(1, (n - 1) / 999)) / bonusT);
     d.every = .9;
     d.chute = Math.max(1.3, 3.2 - n * 0.0065);
     d.pT = Math.max(.3, .5 - n * .0007);
     d.pSpike = n >= PIQUANTES_DES ? Math.min(.35, .14 + (n - PIQUANTES_DES) * .0015) : 0;
-    d.every = Math.min(d.every, d.time / (d.need * 2.5)); var offre = 1.6 - .25 * Math.min(1, (n - 1) / 299); d.pT = Math.min(.8, Math.max(.2, d.need * offre * d.every / d.time));
+    d.every = Math.min(d.every, d.time * bonusT / (d.need * 2.5)); var offre = 1.3 + .15 * Math.max(0, 1 - (n - 1) / 49); d.pT = Math.min(.85, Math.max(.2, d.need * offre * d.every / (d.time * bonusT) / (1 - d.pSpike)));   // 8 nov. : à peine plus de bonnes fleurs que ce qu'il faut attraper
     d.vies = n >= 200 ? 5 : n >= 100 ? 4 : 3;   // 8 nov. : comme les appâts de la pêche : 3 chances, 4 au 100, 5 au 200 ; une bonne fleur en rend une
     return d;
   }
