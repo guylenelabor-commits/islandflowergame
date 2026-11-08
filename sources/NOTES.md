@@ -18,3 +18,4 @@
 - Jardinière avec panier (8 nov.) : 12 poses (img/femp1..12.webp) pendant le jeu ; le panier suit la pose. Bouquet complet : elle danse en tourbillon avec les anciennes poses (img/fem*.webp) pendant que les fleurs sautent du vase. À venir : images Meta de la jardinière et du jardinier qui dansent en tourbillon.
 - Fête (8 nov.) : bouquet complet = la jardinière (img/femdanse1..8) et le jardinier (img/mandanse1,4..10) dansent ; les fleurs du vase montent puis redescendent doucement ; l'écran « niveau suivant » arrive après 5 secondes. Vases : 50 vases (img/vase1..50), un différent tous les 10 niveaux, puis on recommence.
 - Téléphone (8 nov.) : le cadre du jeu remonte à moitié sous la barre du haut et descend jusqu'en bas de l'écran (peut déborder un peu sur les côtés).
+- Danse (8 nov.) : jardinière 28 poses (img/fd1..20 + femdanse1..8), jardinier 29 poses (img/md1..19 + mandanse1..10), mises à la même taille. Pendant la danse, la jardinière revient devant, au sol.
