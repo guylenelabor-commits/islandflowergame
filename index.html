@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#c2406e">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -150,6 +150,7 @@
   @media (display-mode: standalone) {
     html { min-height: calc(100% + env(safe-area-inset-top, 0px)); }
     body { min-height: calc(100% + env(safe-area-inset-top, 0px)); position: relative; }
+    html { overflow: hidden; overscroll-behavior: none; }
     #phone, #fond { position: absolute !important; }
   }
   #fond { background: #2b1a3a center / cover no-repeat; filter: blur(16px) saturate(1.25) brightness(.8); }
@@ -1090,6 +1091,24 @@
   renderTexts(); accueil();
 })();
 
+</script>
+<script>
+  // écran stable sur téléphone : pas de zoom avec deux doigts ni double tape, et la page ne glisse pas
+  (function () {
+    function bloque(e) { e.preventDefault(); }
+    ["gesturestart", "gesturechange", "gestureend"].forEach(function (n) { document.addEventListener(n, bloque, { passive: false }); });
+    document.addEventListener("touchmove", function (e) {
+      if (e.touches && e.touches.length > 1) { e.preventDefault(); return; }
+      for (var el = e.target; el && el !== document.body && el.nodeType === 1; el = el.parentNode) {   // on laisse défiler les listes et les fiches
+        var st = getComputedStyle(el), oy = st.overflowY, ox = st.overflowX;
+        if (((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight + 1) || ((ox === "auto" || ox === "scroll") && el.scrollWidth > el.clientWidth + 1)) return;
+      }
+      e.preventDefault();
+    }, { passive: false });
+    function recale() { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }
+    window.addEventListener("scroll", recale, { passive: true });
+    if (window.visualViewport) window.visualViewport.addEventListener("scroll", recale);
+  })();
 </script>
 </body>
 </html>
