@@ -594,7 +594,7 @@
     return d.kinds.map(function (k) { return d.thorn && k === "rose:rouge" ? "f01" : k; });
   }
   // ---------- partie ----------
-  var nbBrille = 0, D = null, fl = [], caught = 0, vies = 0, fautes = 0, tLeft = 0, tAcc = 0, last = 0, pause = false, fini = false, raf = 0, pts = 0, prises = [];
+  var nbBrille = 0, D = null, fl = [], caught = 0, vies = 0, fautes = 0, tLeft = 0, tAcc = 0, last = 0, pause = false, fini = false, raf = 0, pts = 0, prises = [], cris = { sp: 0, got: 0, paye: false };
   var elNiv = document.getElementById("nivTxt"), elCnt = document.getElementById("cnt"), elVies = document.getElementById("vies"), elEt = document.getElementById("etHud"), elChrono = document.getElementById("chrono"), elBarre = document.getElementById("chronoBarre"), fx = document.getElementById("effets");
   var MAN = { x: .53, y: .265 }, FEM = { x: .46, y: .80 };
   // ---------- personnages animés ----------
@@ -644,6 +644,16 @@
     // à partir du niveau 40 : parfois une autre fleur (mauvaise) tombe en même temps
     if (!leurre && n >= 40 && Math.random() < Math.min(.35, (n - 40) * .0025)) spawn(true);
   }
+  var NCR = 60;
+  function spawnCristal() {
+    cris.sp++; var sx = .15 + Math.random() * .7, n = D.n;
+    fl.push({ k: "cristal", cr: true, im: img("img/nouv/n" + pad(1 + Math.floor(Math.random() * NCR)) + ".webp"), spike: false, brille: true, wob: .02, x0: sx, y0: -.08, x1: Math.max(.12, Math.min(.88, sx + (Math.random() - .5) * .3)), y1: .95, t: 0, D: D.chute * 1.25, rot: (Math.random() - .5) * .5, spin: (Math.random() - .5) * 1, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .3 });
+  }
+  function creditCristal() {
+    if (cris.paye || !cris.got) return; cris.paye = true; var g = cris.got;
+    if (sb && session) sb.rpc("win_flower_crystal", { p_level: D.n, p_n: g }).then(function (r) { prendVies(r); majVieTxt(); }, function () {});
+    else { var v = viesInvite(); v.daily += g; ecrire("viesJ", v); viesJ = { daily: v.daily, bonus: 0 }; majVieTxt(); }
+  }
   function posDe(f) {
     var u = Math.min(1, f.t), ex = 1 - (1 - u) * (1 - u), ey = Math.pow(u, 1.3);
     return { x: (f.x0 + (f.x1 - f.x0) * ex + Math.sin(f.t * 5 + f.rot * 9) * (f.wob || .012)) * W, y: (f.y0 + (f.y1 - f.y0) * ey) * H };
@@ -660,6 +670,7 @@
         else { f.ct += dt / .38; if (f.ct >= 1) fl.splice(i, 1); }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
+      if (D.n % 10 === 0 && D.n <= MAXN && cris.sp < 3 && tLeft <= D.time * (.8 - .2 * cris.sp)) spawnCristal();
       if (tLeft <= 0) { perdu("time"); }
     }
     dessine(pause ? 0 : dt);
@@ -721,6 +732,7 @@
   }
   function attraper(f, p) {
     f.st = 1; f.ct = 0; f.cx = p.x; f.cy = p.y;
+    if (f.cr) { f.ok = true; cris.got++; kickF = 1; chime(cris.got + 2); bulle("+1 ❤️", "oui", p.x, p.y); return; }
     if (f.spike) { f.ok = false; piquer(p, true); return; }
     if (matche(f.k, D.kinds)) {
       f.ok = true; kickF = 1; caught++; bonSansFaute(); prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
@@ -885,7 +897,7 @@
   document.addEventListener("visibilitychange", function () { if (document.hidden) return; chargerVies(function () { if (surSansVies && viesTotal() > 0) { surSansVies = false; presentation(D ? D.n : undefined); } }); });
   function fin() { fini = true; enJeu = false; elChrono.hidden = true; }
   function gagne() {
-    if (fini) return; var r = tLeft / D.time, sauve = 0;
+    if (fini) return; creditCristal(); var r = tLeft / D.time, sauve = 0;
     var etoiles = (r >= .5 && fautes === 0) ? 3 : (r >= .2 && fautes <= 1) ? 2 : 1;
     pts = 100 + Math.round(Math.max(0, tLeft) * 10) - fautes * 20; if (pts < 50) pts = 50;
     fin(); fl = [];
@@ -907,7 +919,7 @@
     }
   }
   function perdu(raison) {
-    if (fini) return; fin(); bip(220, .4, "sawtooth", .07, 90); if (raison !== "vies") depenserVie();
+    if (fini) return; creditCristal(); fin(); bip(220, .4, "sawtooth", .07, 90); if (raison !== "vies") depenserVie();
     setTimeout(function () {
       hud.hidden = true;
       afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2><img class="bqimg" alt="" src="' + D.src + '" style="opacity:.55"><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
@@ -927,7 +939,7 @@
     chargerVies();
   }
   function demarrer() {
-    caught = 0; fautes = 0; prises = []; nbBrille = 0; vies = D.vies; tLeft = D.time; tAcc = D.every * .6; fini = false; pause = false; enJeu = true; fl = [];
+    caught = 0; fautes = 0; prises = []; nbBrille = 0; cris = { sp: 0, got: 0, paye: false }; vies = D.vies; tLeft = D.time; tAcc = D.every * .6; fini = false; pause = false; enJeu = true; fl = [];
     voile.hidden = true; hud.hidden = false; elChrono.hidden = false; jeuEl.classList.remove("sur-accueil"); majHud();
     // pré-charger les images de ce niveau
     kindsBons(D).concat(kindsAutres(D)).slice(0, 60).forEach(function (k) { if (k.indexOf("rose:") !== 0) img(imageDe(k, D.thorn)); });
