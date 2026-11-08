@@ -17,6 +17,7 @@
   .sform label { display: block; font-size: 3.6cqw; font-weight: 800; margin: 2cqw 0 .8cqw; }
   .sform input { width: 100%; box-sizing: border-box; border: .5cqw solid #f39a2b; border-radius: 3cqw; padding: 2cqw 2.5cqw; font: inherit; font-size: 4.4cqw; color: #4a2a00; background: #fff; }
   .sform .rouge { color: #d32f2f; font-size: 3.4cqw; font-weight: 700; margin-top: 2cqw; min-height: 4cqw; }
+  .modes { display: flex; gap: 2cqw; justify-content: center; } .modes button { border: 0; border-radius: 99px; padding: 1.4cqw 4cqw; font: inherit; font-size: 3.8cqw; font-weight: 800; background: #f3e3ea; color: #a0587a; } .modes button.on { background: #ff69b4; color: #fff; }
   .slien { display: block; width: 100%; margin-top: 2cqw; border: 0; background: none; color: #0d5d93; font: inherit; font-size: 4cqw; font-weight: 800; text-decoration: underline; }
   .ico { width: 1.5em; height: 1.5em; vertical-align: -.38em; margin-right: .25em; flex: none; }
   .ico.deux { width: 2.3em; }
@@ -167,7 +168,8 @@
   .pniv { left: 1.6cqw; width: 41cqw; background: linear-gradient(#4a6cb3, #27407f); border: .8cqw solid #f1d27a; color: #fff; }
   .pniv i { font-style: normal; width: 8cqw; height: 8cqw; border-radius: 50%; background: #ffe58a; display: inline-flex; align-items: center; justify-content: center; font-size: 5cqw; }
   .pcnt { right: 1.6cqw; width: 33cqw; background: linear-gradient(#ffa3a0, #f0716f); border: .8cqw solid #ffe3e0; color: #4a1f33; }
-  .menu { position: absolute; left: 50%; top: 3cqw; transform: translateX(-50%); width: 11.6cqw; height: 11.6cqw; border-radius: 50%; border: .7cqw solid #fff; background: #ff8fb0; color: #fff; font-size: 5.4cqw; line-height: 1; padding: 0; box-shadow: 0 .7cqw 0 #c24a74; pointer-events: auto !important; }
+  .menu { position: absolute; left: 50%; top: 3cqw; transform: translateX(-50%); width: 11.6cqw; height: 11.6cqw; border-radius: 50%; border: .7cqw solid #fff; background: #2fb84a; color: #fff; font-size: 5.4cqw; line-height: 1; padding: 0; box-shadow: 0 .7cqw 0 #1d7a2f; pointer-events: auto !important; }
+  .menu .barres { display: block; width: 4cqw; height: 4.6cqw; margin: auto; box-sizing: border-box; border-left: 1.4cqw solid #fff; border-right: 1.4cqw solid #fff; }   /* 8 nov. : pause verte avec deux barres blanches */
   .vies { position: absolute; left: 3cqw; top: 19.5cqw; font-size: 5cqw; letter-spacing: .3cqw; text-shadow: 0 .4cqw .8cqw rgba(0,0,0,.45); }
   .et { position: absolute; right: 3cqw; top: 19cqw; font-family: var(--display); font-weight: 800; font-size: 9cqw; line-height: 1; color: #ffe23c; text-shadow: 0 .4cqw 0 rgba(120,70,0,.7); }
   .chrono { position: absolute; left: 3cqw; right: 3cqw; top: 16.6cqw; height: 1.8cqw; border-radius: 99px; background: rgba(255,255,255,.55); overflow: hidden; }
@@ -224,7 +226,7 @@
   <div class="hud" id="hud" hidden>
     <div class="pnl pniv"><i>🍃</i><span id="nivTxt">NIV. 1</span></div>
     <div class="pnl pcnt"><span id="cnt">0/5</span></div>
-    <button class="menu" id="menuBtn" type="button" aria-label="Menu">⏸</button>
+    <button class="menu" id="menuBtn" type="button" aria-label="Pause"><span class="barres"></span></button>
     <div class="chrono" id="chrono" hidden><i id="chronoBarre"></i></div>
     <div class="vies" id="vies"></div>
     <div class="et" id="etHud">★ 0</div>
@@ -264,7 +266,7 @@
   // ---------- sauvegarde ----------
   function lire(k, d) { try { var v = localStorage.getItem("ifl_" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
   function ecrire(k, v) { try { localStorage.setItem("ifl_" + k, JSON.stringify(v)); } catch (e) {} }
-  var niveau = Math.min(MAXN + 1, Math.max(1, lire("niveau", 1))), sonOn = lire("son", true), total = lire("points", 0);
+  var modeDur = !!lire("dur", false), niveau = Math.min(MAXN + 1, Math.max(1, lire("niveau", 1))),   /* 8 nov. : mode difficile = on glisse le doigt, on ne tape plus sur les fleurs */ sonOn = lire("son", true), total = lire("points", 0);
   var LANGS = window.IFG_LANGS, TR = window.IFG_TR;
   var lang = lire("lang", null);
   if (!lang || !TR[lang]) { var nl = String(navigator.language || "en").slice(0, 2).toLowerCase(); lang = TR[nl] ? nl : "en"; }
@@ -811,7 +813,7 @@
   function toucher(e) {   // 8 nov. : on touche (ou on glisse le doigt) là où elle doit courir
     if (!enJeu || pause || fini) return; if (e.type === "pointerdown") appui = true; else if (!appui) return;
     var r = jeuEl.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-    if (e.type === "pointerdown") {   // 8 nov. : on peut aussi taper sur la fleur : elle part dans le panier et la jardinière court la chercher
+    if (e.type === "pointerdown" && !modeDur) {   // 8 nov. : on peut aussi taper sur la fleur : elle part dans le panier et la jardinière court la chercher
       var best = null, bp = null, bs = 0, bd = 1e9, X = px * W, Y = py * H;
       for (var i = fl.length - 1; i >= 0; i--) {
         var f = fl[i]; if (f.st !== 0 || !f.im.naturalWidth) continue;
@@ -1132,10 +1134,11 @@
     n = n || Math.min(MAXN, niveau); D = defNiveau(n); fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
     var noms = D.kinds.map(function (k) { return /^f(0[2-9]|1\d|20)$/.test(k) ? t("fc" + k.slice(1)) : nomKind(k, true); }).join(" / ");
     if (D.tout) noms = t("bqAll");
-    afficher('<h2>' + t("level", { n: n }) + '</h2>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
-      '<p class="petit">' + t("tipGame") + '</p>' + '<p class="petit">' + t("tipLife", { n: D.vies }) + '</p>' + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
+    afficher('<h2>' + t("level", { n: n }) + '</h2><div class="modes"><button type="button" id="mN" class="' + (modeDur ? '' : 'on') + '">' + t("modeN") + '</button><button type="button" id="mD" class="' + (modeDur ? 'on' : '') + '">' + t("modeD") + '</button></div>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
+      '<p class="petit">' + t(modeDur ? "tipSlide" : "tipGame") + '</p>' + '<p class="petit">' + t("tipLife", { n: D.vies }) + '</p>' + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
       '<p class="petit">' + t("secs", { t: D.time }) + '</p><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="go" type="button">' + t("go") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
     boutonRetour();
+    [["mN", false], ["mD", true]].forEach(function (m) { var b = document.getElementById(m[0]); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); if (modeDur === m[1]) return; modeDur = m[1]; ecrire("dur", modeDur); bip(520, .06); presentation(n); }; });
     var g = document.getElementById("go"); g.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); g.onclick = function (e) { e.stopPropagation(); if (viesTotal() <= 0) { ecranSansVies(); return; } bip(660, .08); demarrer(); };
     chargerVies();
   }
