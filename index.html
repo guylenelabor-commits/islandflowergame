@@ -470,6 +470,8 @@
   }
   function musStop() { try { if (mus) { mus.master.gain.cancelScheduledValues(actx.currentTime); mus.master.gain.setTargetAtTime(0, actx.currentTime, .4); } } catch (e) {} }
   document.addEventListener("pointerdown", function () { musStart(); }, { once: true });
+  function musReveil() { try { if (sonOn && actx && actx.state !== "running") { actx.resume(); if (mus) musStart(); } } catch (e) {} }   // 8 nov. : si le navigateur a coupé le son (onglet caché, mise en veille), il revient au toucher suivant
+  document.addEventListener("pointerdown", musReveil, true); document.addEventListener("visibilitychange", function () { if (!document.hidden) musReveil(); });
   document.addEventListener("visibilitychange", function () { try { if (!actx || !mus) return; if (document.hidden) actx.suspend(); else if (sonOn) actx.resume(); } catch (e) {} });
   var sonBtn = document.getElementById("son");
   function majSon() { sonBtn.textContent = sonOn ? "🔊" : "🔇"; sonBtn.setAttribute("aria-label", sonOn ? t("soundOff") : t("soundOn")); }
