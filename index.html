@@ -664,42 +664,44 @@
     femV = dt > 0 ? (femX - ax) / dt * W : 0; var femVY = dt > 0 ? (femY - ay) / dt : 0; if (Math.abs(femX - ax) > 1e-4) femDir = femX < ax ? -1 : 1;
     var bouge = Math.abs(femV) > W * .05 || Math.abs(femVY) > .05;
     var mav = manX; if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .14 + Math.random() * .72; manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
-    var MI = MANS[kickM > .5 ? (manDir < 0 ? 4 : 2) : Math.abs(manV) > .05 ? (manV < 0 ? 0 : 1) : 3];
+    var MI = MANS[kickM > .5 ? (manDir < 0 ? 4 : 2) : Math.abs(manV) > .05 ? (manV < 0 ? 0 : 1) : 3], MD = gerbe >= 0 ? MAND[Math.floor(gerbe * 2.5) % MAND.length] : null; if (MD && MD.complete && MD.naturalWidth) MI = MD; else MD = null;   // 8 nov. : il danse aussi quand le bouquet est complet
     if (MI && MI.complete && MI.naturalWidth) {
-      var mhh = (by(349) - by(106)) * .78,   /* 8 nov. : jardinier plus petit */ mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
+      var mhh = (by(349) - by(106)) * .78 * (MD ? MI.naturalHeight / 473 : 1),   /* 8 nov. : jardinier plus petit */ mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
       ctx.drawImage(MI, manX * W - mww / 2, by(106 + MAN_DY) + (by(349) - by(106)) - mhh - mbob, mww, mhh);
     } else if (persoMan.complete && persoMan.naturalWidth) {
       ctx.drawImage(persoMan, bx(234) + (manX - .54) * W, by(106 + MAN_DY), bx(234 + 207) - bx(234), by(106 + 243) - by(106));
     }
     femBouge = bouge; var FP = FEMP[kickF > .3 ? (femDir < 0 ? 6 : 10) : bouge ? (femDir < 0 ? (Math.floor(tPerso * 7) % 2 ? 5 : 0) : (Math.floor(tPerso * 7) % 2 ? 8 : 1)) : (enJeu && !fini ? (Math.floor(tPerso * .6) % 4 === 3 ? 9 : 4) : 9)];   // 8 nov. : 12 poses de la jardinière avec son panier
-    var fete = gerbe >= 0; if (fete) FP = null;   // 8 nov. : bouquet complet : elle danse en tourbillon avec ses anciennes poses
-    var avecPanier = FP && FP.complete && FP.naturalWidth, FI = fete ? FEMS[[7, 3, 2, 3][Math.floor(gerbe * 6) % 4]] : avecPanier ? FP : FEMS[kickF > .3 ? 7 : bouge ? (femDir < 0 ? 0 : 1) : (enJeu && !fini ? 2 : 4)];
+    var fete = gerbe >= 0; if (fete) { FP = FEMD[Math.floor(gerbe * 2.5) % FEMD.length]; if (!(FP && FP.complete && FP.naturalWidth)) FP = null; }   // 8 nov. : bouquet complet : elle danse en tourbillon avec ses anciennes poses
+    var avecPanier = FP && FP.complete && FP.naturalWidth, FI = fete && !avecPanier ? FEMS[[7, 3, 2, 3][Math.floor(gerbe * 6) % 4]] : avecPanier ? FP : FEMS[kickF > .3 ? 7 : bouge ? (femDir < 0 ? 0 : 1) : (enJeu && !fini ? 2 : 4)];
     if (FI && FI.complete && FI.naturalWidth) {
-      var fhh = femHaut(femY) * (avecPanier ? FI.naturalHeight / 410 : 1), fww = fhh * FI.naturalWidth / FI.naturalHeight, bob = bouge ? Math.abs(Math.sin(tPerso * 14)) * H * .008 : 0;
+      var fhh = femHaut(femY) * (avecPanier ? FI.naturalHeight / (fete ? 571 : 410) : 1), fww = fhh * FI.naturalWidth / FI.naturalHeight, bob = bouge ? Math.abs(Math.sin(tPerso * 14)) * H * .008 : 0;
       ctx.save(); ctx.globalAlpha = .18; ctx.fillStyle = "#3a2410"; ctx.beginPath(); ctx.ellipse(femX * W, femY * H, fww * .32, fhh * .045, 0, 0, 6.2832); ctx.fill(); ctx.restore();
       ctx.save(); ctx.translate(femX * W + Math.sin(tPerso * 45) * hurtF * W * .012, femY * H - bob - kickF * H * .012);
-      if (fete) { ctx.translate(0, -Math.abs(Math.sin(gerbe * 9)) * H * .025); ctx.scale(Math.cos(gerbe * 14), 1); }
+      if (fete) { ctx.translate(0, -Math.abs(Math.sin(gerbe * 9)) * H * .02); if (!avecPanier) ctx.scale(Math.cos(gerbe * 14), 1); }
       ctx.drawImage(FI, -fww / 2, -fhh, fww, fhh); ctx.restore();
     }
     if (!fete && !avecPanier && PANIER.complete && PANIER.naturalWidth) { var pb = panier(); ctx.drawImage(PANIER, pb.x - pb.w / 2, pb.y - pb.w * .62, pb.w, pb.w * PANIER.naturalHeight / PANIER.naturalWidth); }
   }
-  var FY0 = .6, FY1 = .975, femX = .5, femY = .93, femTX = .5, femTY = .93, femDir = 1, PANIER = img("img/panier.webp"), VASE = img("img/vase.webp"), vaseFl = [], gerbe = -1;
+  var FY0 = .6, FY1 = .975, femX = .5, femY = .93, femTX = .5, femTY = .93, femDir = 1, PANIER = img("img/panier.webp"), VASE0 = img("img/vase.webp"), VASES = Array.apply(null, Array(50)).map(function (x, i) { return i + 1; }).map(function (i) { return img("img/vase" + i + ".webp"); }), VASE = VASE0, vaseFl = [], gerbe = -1;
   function femEch(y) { return .62 + .38 * (y - FY0) / (FY1 - FY0); }   // plus petite quand elle est au fond de l'allée
   function femHaut(y) { return H * .22 * femEch(y); }   // 8 nov. : jardinière plus petite
+  var MAND = [1, 4, 5, 6, 7, 8, 9, 10].map(function (i) { return img("img/mandanse" + i + ".webp"); }), FEMD = [1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return img("img/femdanse" + i + ".webp"); });
   var femBouge = false, FEMP = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (i) { return img("img/femp" + i + ".webp"); });
   function panier() { var h = femHaut(femY), bg = femBouge || kickF > .3; return { x: femX * W + (bg ? femDir * h * .27 : 0), y: femY * H - h * (bg ? .58 : .45), w: h * .37 }; }   /* 8 nov. : le panier est dans ses mains (selon la pose) */
+  function choisirVase() { var v = D ? VASES[Math.floor((D.n - 1) / 10) % 50] : null; VASE = v && v.complete && v.naturalWidth ? v : VASE0; }   // 8 nov. : un vase différent tous les 10 niveaux (50 vases, puis on recommence)
   function vasePos() { var h = H * .2, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: W * .12, b: H * .99, h: h, w: w }; }
   function dessineVase(dt) {
-    if (!VASE.complete || !VASE.naturalWidth) return; var v = vasePos(), n = Math.min(vaseFl.length, 15), top = v.b - v.h, px = v.x, py = top + v.h * .3;
+    choisirVase(); if (!VASE.complete || !VASE.naturalWidth) return; var v = vasePos(), n = Math.min(vaseFl.length, 15), top = v.b - v.h, px = v.x, py = top + v.h * .3;
     if (gerbe >= 0) gerbe += dt;
     for (var k = 0; k < n; k++) {
       var im = vaseFl[vaseFl.length - n + k]; if (!im.naturalWidth) continue;
       var ang = n > 1 ? -.55 + 1.1 * k / (n - 1) : 0, fh = H * .13, fw = fh * im.naturalWidth / im.naturalHeight, x = px, y = py, r = ang;
-      if (gerbe >= 0) { var g = gerbe, vx = Math.sin(ang * 1.6) * W * .5, vy = H * (1.1 + .25 * Math.cos(k * 2.1)); x += vx * g; y += -vy * g + H * .9 * g * g; r = ang + g * (k % 2 ? 4 : -4); }
+      if (gerbe >= 0) { var g = Math.min(gerbe, 4.6), vx = Math.sin(ang * 1.6) * W * .22, vy = H * (.5 + .1 * Math.cos(k * 2.1)); x += vx * g + Math.sin(g * 2 + k) * W * .03; y += -vy * g + H * .1 * g * g; r = ang + g * (k % 2 ? 1.5 : -1.5); }
       ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.drawImage(im, -fw / 2, -fh, fw, fh); ctx.restore();
     }
     ctx.save(); ctx.globalAlpha = .82; ctx.drawImage(VASE, v.x - v.w / 2, top, v.w, v.h); ctx.restore();
-    if (gerbe >= 0 && gerbe < 1.6) for (var q = 0; q < 26; q++) { var a2 = q * 2.4, rr = gerbe * W * (.25 + .5 * ((q * 37) % 10) / 10); ctx.globalAlpha = Math.max(0, 1 - gerbe / 1.6); ctx.fillStyle = ["#ffd6e8", "#fff3b0", "#ffffff", "#c8f7d0"][q % 4]; ctx.beginPath(); ctx.arc(px + Math.cos(a2) * rr, top - gerbe * H * .25 + Math.sin(a2) * rr * .6, W * .012, 0, 6.2832); ctx.fill(); }
+    if (gerbe >= 0 && gerbe < 4.6) for (var q = 0; q < 26; q++) { var a2 = q * 2.4, rr = Math.min(gerbe, 1.5) * W * (.25 + .5 * ((q * 37) % 10) / 10); ctx.globalAlpha = Math.max(0, 1 - gerbe / 4.6); ctx.fillStyle = ["#ffd6e8", "#fff3b0", "#ffffff", "#c8f7d0"][q % 4]; ctx.beginPath(); ctx.arc(px + Math.cos(a2) * rr, top - Math.min(gerbe, 1.5) * H * .25 + Math.max(0, gerbe - 1.5) * H * .07 + Math.sin(a2) * rr * .6, W * .012, 0, 6.2832); ctx.fill(); }
     ctx.globalAlpha = 1;
   }
   function majHud() {
@@ -1112,7 +1114,7 @@
     if (D.n >= niveau) niveau = Math.min(MAXN + 1, D.n + 1); ecrire("niveau", niveau); sauveCompte();
     bip(523, .12, "triangle", .08); setTimeout(function () { bip(659, .12, "triangle", .08); }, 120); setTimeout(function () { bip(784, .2, "triangle", .08); }, 240);
     var etxt = ""; for (var i = 0; i < 3; i++) etxt += i < etoiles ? "★" : "☆";
-    setTimeout(function () { hud.hidden = true; if (D.gift) montrerFiche(D.gift, ecranGagne); else ecranGagne(); }, 1700);
+    setTimeout(function () { hud.hidden = true; if (D.gift) montrerFiche(D.gift, ecranGagne); else ecranGagne(); }, 5000);   // 8 nov. : on laisse le temps de voir la danse et la gerbe
     function ecranGagne() {
       hud.hidden = true;
       var dernier = D.n >= MAXN;
