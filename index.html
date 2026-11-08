@@ -727,7 +727,7 @@
         else { f.ct += dt / .38; if (f.ct >= 1) fl.splice(i, 1); }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
-      if (D.n % 10 === 0 && D.n <= MAXN && cris.sp < 3 && tLeft <= D.time * (.8 - .2 * cris.sp)) spawnCristal();
+      // 8 nov. : les fleurs dans un carré (fleurs de cristal) sont retirées du jeu
       if (tFl < (D.n >= 200 ? 3 : D.n >= 100 ? 2 : 1) && tLeft <= D.time * (.6 - .15 * tFl)) spawnTemps();
       if (tLeft <= 0) { perdu("time"); }
     }
