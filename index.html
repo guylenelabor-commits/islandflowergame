@@ -438,12 +438,8 @@
   function installer() {
     if (invite) { var iv = invite; invite = null; iv.prompt(); iv.userChoice.then(function () { accueil(); }, function () {}); return; }
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (navigator.getInstalledRelatedApps && !/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !installer.vu) {
-      installer.vu = true;
-      navigator.getInstalledRelatedApps().then(function (l) { if (l && l.length) { afficher('<h2>' + icone("tel") + '</h2><p>' + (lang === "fr" ? "Le jeu est déjà installé sur cet ordinateur : ouvre-le depuis tes applications." : "The game is already installed on this computer: open it from your apps.") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour(); installer.vu = false; } else { installer(); installer.vu = false; } }, function () { installer(); installer.vu = false; });
-      return;
-    }
-    var pc = (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? null : (lang === "fr" ? "Sur ordinateur : clique sur l’icône d’installation (un petit écran avec une flèche) tout à droite de la barre d’adresse. Sinon : menu ⋮ de Chrome → « Diffuser, enregistrer et partager » → « Installer la page comme application »." : "On a computer: click the install icon (a small screen with an arrow) at the right end of the address bar. Otherwise: Chrome menu ⋮ → “Cast, save and share” → “Install page as app”."));
+    if (!installer.att && !/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { installer.att = true; var n = 0, tm = setInterval(function () { n++; if (invite || n > 8) { clearInterval(tm); installer(); installer.att = false; } }, 250); return; }
+    var pc = (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? null : (lang === "fr" ? "Le jeu est déjà installé sur cet ordinateur. Pour l’ouvrir : clique sur « Ouvrir dans l’application » en haut à droite de Chrome, ou trouve-le dans tes applications." : "The game is already installed on this computer. To open it: click “Open in app” at the top right of Chrome, or find it in your apps."));
     afficher('<h2>' + icone("tel") + '</h2><p>' + (pc || t(ios ? "iosTip" : "andTip")) + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>');
     boutonRetour();
   }
