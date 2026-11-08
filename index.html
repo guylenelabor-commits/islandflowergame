@@ -747,7 +747,7 @@
         var f = fl[i];
         if (f.st === 0 && f.t > .55) { var pp = posDe(f), pb = panier(); if (Math.abs(pp.x - pb.x) < pb.w * .55 && Math.abs(pp.y - pb.y) < pb.w * .42) { attraper(f, pp); continue; } }   // 8 nov. : attrapée dans le panier
         if (f.st === 0) { f.t += dt / f.D; f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
-        else { f.ct += dt / .6; if (f.ct >= 1) fl.splice(i, 1); }
+        else { f.ct += dt / (f.ok ? 1.1 : .6); if (f.ct >= 1) fl.splice(i, 1); }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
       // 8 nov. : les fleurs dans un carré (fleurs de cristal) sont retirées du jeu
@@ -779,7 +779,12 @@
       if (f.st === 0) p = posDe(f);
       else {
         var u = Math.min(1, f.ct), e = 1 - Math.pow(1 - u, 2);
-        var vp = vasePos(); p = f.ok ? { x: f.cx + (vp.x - f.cx) * e, y: f.cy + (vp.b - vp.h * .9 - f.cy) * e - Math.sin(e * 3.1416) * H * .12 } : { x: f.cx, y: f.cy + e * H * .12 }; s = 1 - .45 * e; a = f.ok ? (e > .9 ? (1 - e) * 10 : 1) : 1 - e; rot = f.rot * (1 - e);
+        var vp = vasePos(), pb = panier();
+        if (f.ok) { if (u < .45) { var e1 = 1 - Math.pow(1 - u / .45, 2); p = { x: f.cx + (pb.x - f.cx) * e1, y: f.cy + (pb.y - pb.w * .2 - f.cy) * e1 }; s = 1 - .35 * e1; }   // d'abord dans le panier
+          else { var e2 = (u - .45) / .55; p = { x: pb.x + (vp.x - pb.x) * e2, y: pb.y - pb.w * .2 + (vp.b - vp.h * .9 - pb.y + pb.w * .2) * e2 - Math.sin(e2 * 3.1416) * H * .12 }; s = .65 - .1 * e2; }   // puis dans le vase
+          a = u > .92 ? (1 - u) / .08 : 1; }
+        else { p = { x: f.cx, y: f.cy + e * H * .12 }; s = 1 - .45 * e; a = 1 - e; }
+        rot = f.rot * (1 - e);
       }
       if (f.st === 0 && f.t > .93) a = Math.max(0, 1 - (f.t - .93) / .07);
       ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(rot); ctx.scale(s, s);
@@ -806,6 +811,18 @@
   function toucher(e) {   // 8 nov. : on touche (ou on glisse le doigt) là où elle doit courir
     if (!enJeu || pause || fini) return; if (e.type === "pointerdown") appui = true; else if (!appui) return;
     var r = jeuEl.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    if (e.type === "pointerdown") {   // 8 nov. : on peut aussi taper sur la fleur : elle part dans le panier et la jardinière court la chercher
+      var best = null, bp = null, bs = 0, bd = 1e9, X = px * W, Y = py * H;
+      for (var i = fl.length - 1; i >= 0; i--) {
+        var f = fl[i]; if (f.st !== 0 || !f.im.naturalWidth) continue;
+        var q = posDe(f), h = f.sz * W * 1.15, w = h * f.im.naturalWidth / f.im.naturalHeight;
+        if (Math.abs(X - q.x) <= Math.max(w, h * .6) * .7 && Math.abs(Y - q.y) <= h * .7) {
+          var sc = (f.tm || f.bon) ? 1 : 0, d = Math.abs(X - q.x) + Math.abs(Y - q.y);
+          if (!best || sc > bs || (sc === bs && d < bd)) { best = f; bp = q; bs = sc; bd = d; }
+        }
+      }
+      if (best) { femTX = best.x1; femTY = best.fy || femTY; attraper(best, bp); appui = false; return; }
+    }
     femTX = Math.max(.08, Math.min(.92, px)); femTY = Math.max(FY0, Math.min(FY1, py));
   }
 
