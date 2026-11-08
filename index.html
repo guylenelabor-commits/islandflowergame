@@ -25,6 +25,7 @@
   .voile.acc { padding-bottom: 20cqw; }
   .voile.mini { background: transparent; pointer-events: none; align-items: flex-start; justify-content: center; padding: 30cqw 0 0 0; }
   .voile.mini .carte { pointer-events: auto; width: 44cqw; padding: 2.4cqw 2.6cqw 2.8cqw; gap: 1.4cqw; border-radius: 3.5cqw; background: rgba(255,248,238,.6); backdrop-filter: blur(2px); box-shadow: 0 1cqw 3cqw rgba(0,0,0,.18); }
+  .voile.gagne { padding-top: 19cqw; } .voile.gagne .carte { width: 50cqw; gap: .8cqw; padding: 1.8cqw 2.4cqw 2cqw; } .voile.gagne .carte h2 { font-size: 4.2cqw; } .voile.gagne .gros-bouton { font-size: 4cqw; padding: 1.4cqw 0; } .voile.gagne .slien { font-size: 3.2cqw; margin-top: .5cqw; }   /* 8 nov. : petite carte au-dessus de la tête du jardinier */ .voile.gagne .bqfl, .voile.gagne .nomBq { display: none; } .voile.gagne .etoiles { font-size: 6cqw; letter-spacing: .5cqw; } .voile.gagne .carte p.petit { display: block; font-size: 3.2cqw; }
   .voile.mini .carte h2 { font-size: 5cqw; } .voile.mini .carte p { display: none; } .voile.mini .gros-bouton { font-size: 4.6cqw; padding: 1.8cqw 0; }
   .voile.acc .install { position: absolute; left: -12cqw; right: -12cqw; bottom: -17cqw; margin: 0 auto; width: max-content; max-width: 84cqw; border: 0; border-radius: 99px; background: #ffd23c; color: #5a3600; font: inherit; font-size: 3.5cqw; font-weight: 800; padding: 1.4cqw 3.4cqw; box-shadow: 0 .8cqw 0 #c79a00; line-height: 1.2; }
   .voile.acc .install .ico { width: 1.3em; height: 1.3em; }
@@ -1120,7 +1121,7 @@
       var dernier = D.n >= MAXN;
       afficher((false ? '' : '<h2>' + t("done") + '</h2>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
         (dernier ? '<p>🌸 ' + t("soon") + '</p>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
-        '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
+        '<button class="slien" id="ret" type="button">' + t("home") + '</button>'); voile.className = "voile mini gagne";   // 8 nov. : petite carte, on voit encore la danse derrière
       var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(D.gift); }; }
       var s = document.getElementById("suiv"); if (s) { s.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); s.onclick = function (e) { e.stopPropagation(); bip(660, .08); presentation(Math.min(MAXN, D.n + 1)); }; }
       boutonRetour();
