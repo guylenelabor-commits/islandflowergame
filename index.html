@@ -834,8 +834,12 @@
     };
   }
   function ecranNouveauMdp() {
-    afficher('<h2>' + t("pwNewT") + '</h2><form class="sform" id="fn" novalidate><label for="fnw">' + t("password") + '</label><input id="fnw" type="password" autocomplete="new-password">' +
-      '<div class="rouge" id="fnerr"></div><button class="gros-bouton" type="submit">' + t("pwSave") + '</button></form>');
+    afficher('<h2>' + t("pwNewT") + '</h2><form class="sform" id="fn" novalidate><label for="fnw">' + t("password") + '</label><div class="ligne"><input id="fnw" name="password" type="password" autocomplete="new-password"><button class="oeil" id="voir" type="button" aria-label="' + echap(t("password")) + '">' + icone("oeil") + '</button></div>' +
+      '<div class="rouge" id="fnerr"></div><button class="gros-bouton" type="submit">' + t("pwSave") + '</button></form><button class="slien" id="ret" type="button">' + t("back") + '</button>');
+    var voir = document.getElementById("voir");
+    voir.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    voir.onclick = function (e) { e.stopPropagation(); var champ = document.getElementById("fnw"), cache = champ.type === "password"; champ.type = cache ? "text" : "password"; voir.innerHTML = icone(cache ? "oeilbarre" : "oeil"); };
+    boutonRetour(session ? ecranMenu : accueil);
     document.getElementById("fn").addEventListener("pointerdown", function (e) { e.stopPropagation(); });
     document.getElementById("fn").onsubmit = function (e) {
       e.preventDefault(); e.stopPropagation(); var v = document.getElementById("fnw").value, er = document.getElementById("fnerr");
