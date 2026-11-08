@@ -664,7 +664,7 @@
     var mav = manX; if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .14 + Math.random() * .72; manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
     var MI = MANS[kickM > .5 ? (manDir < 0 ? 4 : 2) : Math.abs(manV) > .05 ? (manV < 0 ? 0 : 1) : 3];
     if (MI && MI.complete && MI.naturalWidth) {
-      var mhh = (by(349) - by(106)) * .95, mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
+      var mhh = (by(349) - by(106)) * .78,   /* 8 nov. : jardinier plus petit */ mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
       ctx.drawImage(MI, manX * W - mww / 2, by(106 + MAN_DY) + (by(349) - by(106)) - mhh - mbob, mww, mhh);
     } else if (persoMan.complete && persoMan.naturalWidth) {
       ctx.drawImage(persoMan, bx(234) + (manX - .54) * W, by(106 + MAN_DY), bx(234 + 207) - bx(234), by(106 + 243) - by(106));
@@ -681,7 +681,7 @@
   }
   var FY0 = .6, FY1 = .975, femX = .5, femY = .93, femTX = .5, femTY = .93, femDir = 1, PANIER = img("img/panier.webp"), VASE = img("img/vase.webp"), vaseFl = [], gerbe = -1;
   function femEch(y) { return .62 + .38 * (y - FY0) / (FY1 - FY0); }   // plus petite quand elle est au fond de l'allée
-  function femHaut(y) { return H * .27 * femEch(y); }
+  function femHaut(y) { return H * .22 * femEch(y); }   // 8 nov. : jardinière plus petite
   function panier() { var h = femHaut(femY); return { x: femX * W + femDir * h * .05, y: femY * H - h * .36, w: h * .46 }; }
   function vasePos() { var h = H * .2, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: W * .12, b: H * .99, h: h, w: w }; }
   function dessineVase(dt) {
@@ -712,7 +712,7 @@
     else { k = pick(kindsAutres(D)); src = imageDe(k, D.thorn); }
     var im = img(src), brille = false;   // 8 nov. : plus de halo doré : les bonnes fleurs ont un contour vert
     var n = D.n, der = .16 + Math.min(.34, n * .0013), va = .3 + Math.min(.5, n * .002);
-    var sx = manX, x1 = Math.max(.1, Math.min(.9, sx + (Math.random() - .5) * der)); kickM = 1; manDir = x1 < sx ? -1 : 1; fl.push({ k: k, im: im, bon: !spike && matche(k, D.kinds), spike: spike, brille: brille, wob: .012 + Math.min(.035, n * .00013), x0: sx, y0: .21, x1: x1, y1: .95, t: 0, D: D.chute * (1 - va / 2 + Math.random() * va), rot: (Math.random() - .5) * .8, spin: (Math.random() - .5) * 1.6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .2 + Math.random() * .02 }); atterrir(fl[fl.length - 1]);
+    var sx = manX, x1 = Math.max(.1, Math.min(.9, sx + (Math.random() - .5) * der)); kickM = 1; manDir = x1 < sx ? -1 : 1; fl.push({ k: k, im: im, bon: !spike && matche(k, D.kinds), spike: spike, brille: brille, wob: .012 + Math.min(.035, n * .00013), x0: sx, y0: .25, x1: x1, y1: .95, t: 0, D: D.chute * (1 - va / 2 + Math.random() * va), rot: (Math.random() - .5) * .8, spin: (Math.random() - .5) * 1.6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .2 + Math.random() * .02 }); atterrir(fl[fl.length - 1]);
     // à partir du niveau 40 : parfois une autre fleur (mauvaise) tombe en même temps
     if (!leurre && n >= 40 && Math.random() < Math.min(.35, (n - 40) * .0025)) spawn(true);
   }
@@ -723,7 +723,7 @@
   }
   function spawnTemps() {   // 8 nov. : la fleur du temps, blanche avec une horloge, rend du temps
     tFl++; var sx = manX; kickM = 1; manDir = sx > .5 ? -1 : 1;
-    fl.push({ k: "temps", tm: true, im: IM_TEMPS, spike: false, brille: true, wob: .02, x0: sx, y0: .21, x1: Math.max(.12, Math.min(.88, sx + (Math.random() - .5) * .3)), y1: .95, t: 0, D: D.chute * 1.3, rot: 0, spin: (Math.random() - .5) * .6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .19 }); atterrir(fl[fl.length - 1]);
+    fl.push({ k: "temps", tm: true, im: IM_TEMPS, spike: false, brille: true, wob: .02, x0: sx, y0: .25, x1: Math.max(.12, Math.min(.88, sx + (Math.random() - .5) * .3)), y1: .95, t: 0, D: D.chute * 1.3, rot: 0, spin: (Math.random() - .5) * .6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .19 }); atterrir(fl[fl.length - 1]);
   }
   function creditCristal() {
     if (cris.paye || !cris.got) return; cris.paye = true; var g = cris.got;
