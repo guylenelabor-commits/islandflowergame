@@ -431,6 +431,7 @@
   function renderTexts() { majSon(); voile.dir = lang === "ar" ? "rtl" : "ltr"; document.documentElement.lang = lang; }
   function boutonRetour(f) { var b = document.getElementById("ret"); if (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); (f || accueil)(); }; } }
   var invite = null;
+  if ("serviceWorker" in navigator) { try { navigator.serviceWorker.register("/sw.js"); } catch (e) {} }
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); invite = e; });
   window.addEventListener("appinstalled", function () { invite = null; if (!enJeu && voile && !voile.hidden && voile.classList.contains("acc")) accueil(); });
   function dejaInstalle() { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } }
