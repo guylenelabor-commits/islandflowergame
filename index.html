@@ -671,20 +671,23 @@
     } else if (persoMan.complete && persoMan.naturalWidth) {
       ctx.drawImage(persoMan, bx(234) + (manX - .54) * W, by(106 + MAN_DY), bx(234 + 207) - bx(234), by(106 + 243) - by(106));
     }
-    var pose = kickF > .3 ? 7 : bouge ? (femDir < 0 ? 0 : 1) : (enJeu && !fini ? 2 : 4);
-    var FI = FEMS[pose];
+    femBouge = bouge; var FP = FEMP[kickF > .3 ? (femDir < 0 ? 6 : 10) : bouge ? (femDir < 0 ? (Math.floor(tPerso * 7) % 2 ? 5 : 0) : (Math.floor(tPerso * 7) % 2 ? 8 : 1)) : (enJeu && !fini ? (Math.floor(tPerso * .6) % 4 === 3 ? 9 : 4) : 9)];   // 8 nov. : 12 poses de la jardinière avec son panier
+    var fete = gerbe >= 0; if (fete) FP = null;   // 8 nov. : bouquet complet : elle danse en tourbillon avec ses anciennes poses
+    var avecPanier = FP && FP.complete && FP.naturalWidth, FI = fete ? FEMS[[7, 3, 2, 3][Math.floor(gerbe * 6) % 4]] : avecPanier ? FP : FEMS[kickF > .3 ? 7 : bouge ? (femDir < 0 ? 0 : 1) : (enJeu && !fini ? 2 : 4)];
     if (FI && FI.complete && FI.naturalWidth) {
-      var fhh = femHaut(femY), fww = fhh * FI.naturalWidth / FI.naturalHeight, bob = bouge ? Math.abs(Math.sin(tPerso * 14)) * H * .008 : 0;
+      var fhh = femHaut(femY) * (avecPanier ? FI.naturalHeight / 410 : 1), fww = fhh * FI.naturalWidth / FI.naturalHeight, bob = bouge ? Math.abs(Math.sin(tPerso * 14)) * H * .008 : 0;
       ctx.save(); ctx.globalAlpha = .18; ctx.fillStyle = "#3a2410"; ctx.beginPath(); ctx.ellipse(femX * W, femY * H, fww * .32, fhh * .045, 0, 0, 6.2832); ctx.fill(); ctx.restore();
       ctx.save(); ctx.translate(femX * W + Math.sin(tPerso * 45) * hurtF * W * .012, femY * H - bob - kickF * H * .012);
+      if (fete) { ctx.translate(0, -Math.abs(Math.sin(gerbe * 9)) * H * .025); ctx.scale(Math.cos(gerbe * 14), 1); }
       ctx.drawImage(FI, -fww / 2, -fhh, fww, fhh); ctx.restore();
     }
-    if (PANIER.complete && PANIER.naturalWidth) { var pb = panier(); ctx.drawImage(PANIER, pb.x - pb.w / 2 + Math.sin(tPerso * 45) * hurtF * W * .012, pb.y - pb.w * .62 - kickF * H * .012, pb.w, pb.w * PANIER.naturalHeight / PANIER.naturalWidth); }
+    if (!fete && !avecPanier && PANIER.complete && PANIER.naturalWidth) { var pb = panier(); ctx.drawImage(PANIER, pb.x - pb.w / 2, pb.y - pb.w * .62, pb.w, pb.w * PANIER.naturalHeight / PANIER.naturalWidth); }
   }
   var FY0 = .6, FY1 = .975, femX = .5, femY = .93, femTX = .5, femTY = .93, femDir = 1, PANIER = img("img/panier.webp"), VASE = img("img/vase.webp"), vaseFl = [], gerbe = -1;
   function femEch(y) { return .62 + .38 * (y - FY0) / (FY1 - FY0); }   // plus petite quand elle est au fond de l'allée
   function femHaut(y) { return H * .22 * femEch(y); }   // 8 nov. : jardinière plus petite
-  function panier() { var h = femHaut(femY); return { x: femX * W + femDir * h * .05, y: femY * H - h * .34, w: h * .37 };   /* 8 nov. : panier un peu plus petit */ }
+  var femBouge = false, FEMP = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (i) { return img("img/femp" + i + ".webp"); });
+  function panier() { var h = femHaut(femY), bg = femBouge || kickF > .3; return { x: femX * W + (bg ? femDir * h * .27 : 0), y: femY * H - h * (bg ? .58 : .45), w: h * .37 }; }   /* 8 nov. : le panier est dans ses mains (selon la pose) */
   function vasePos() { var h = H * .2, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: W * .12, b: H * .99, h: h, w: w }; }
   function dessineVase(dt) {
     if (!VASE.complete || !VASE.naturalWidth) return; var v = vasePos(), n = Math.min(vaseFl.length, 15), top = v.b - v.h, px = v.x, py = top + v.h * .3;
