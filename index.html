@@ -826,7 +826,7 @@
       e.preventDefault(); e.stopPropagation(); var v = document.getElementById("fe").value.trim(), er = document.getElementById("foerr");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { er.textContent = t("eGeneric"); return; }
       if (!sb) { er.textContent = t("eGeneric"); return; }
-      sb.auth.resetPasswordForEmail(v, { redirectTo: location.origin + "/" }).then(function (r) {
+      sb.auth.resetPasswordForEmail(v, { redirectTo: "https://islandkitchengame.com/?jeu=flower" }).then(function (r) {
         if (r.error && !/rate|limit/i.test(r.error.message || "")) { er.textContent = t("eGeneric"); return; }
         afficher('<h2>' + t("pwForgot") + '</h2><p>' + t("pwSent") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour();
       }, function () { er.textContent = t("eGeneric"); });
