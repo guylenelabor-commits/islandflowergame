@@ -168,7 +168,7 @@
   /* 8 nov. : version ordinateur : le jeu prend toute la largeur, le décor s'étend sur les côtés */
   body.large #phone { background: #2b1a3a !important; border-radius: 26px; overflow: hidden; box-shadow: 0 0 0 3px #e2b23a, 0 0 0 6px #a8740f, 0 20px 50px rgba(0,0,0,.45); }
   body.large #cv { left: 0; top: 0; width: 100%; height: 100%; border-radius: 0; }
-  body.large #jeu { top: 0; height: 100%; border-radius: 0; box-shadow: 0 0 0 3px #f3d27a, 0 0 0 6px #c8921c, 0 0 0 7px #7a560e, 0 0 18px 6px rgba(0,0,0,.35); }   /* 8 nov. : contour doré autour de la zone du milieu */
+  body.large #jeu { top: 0; height: 100%; border-radius: 0; }
   body.large #decoFlou { display: block; position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(14px) brightness(.92) saturate(1.1); }
   #decoG, #decoD { display: none; }
   body.large #decoG, body.large #decoD { display: block; position: absolute; top: 0; height: 100%; background-repeat: no-repeat; transform: scaleX(-1); filter: brightness(.9); }   /* le décor continue sur les côtés, en miroir */
@@ -378,7 +378,7 @@
       h = VH - 24; w = Math.min(VW - 24, Math.round(h * 1.78)); haut = 12;
       var jw = Math.round(h * 505 / 1001); jeuEl.style.left = Math.round((w - jw) / 2) + "px"; jeuEl.style.width = jw + "px";
       var jl = Math.round((w - jw) / 2); decoNet.style.left = jl + "px"; decoNet.style.width = jw + "px";
-      [[decoG, jl - jw + 1], [decoD, jl + jw - 1]].forEach(function (d) { d[0].style.left = d[1] + "px"; d[0].style.width = jw + "px"; });
+      [[decoG, jl - jw], [decoD, jl + jw]].forEach(function (d) { d[0].style.left = d[1] + "px"; d[0].style.width = jw + "px"; });
     } else { jeuEl.style.left = ""; jeuEl.style.width = ""; decoNet.style.left = ""; decoNet.style.width = ""; }
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
     phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = haut + "px";
@@ -673,7 +673,7 @@
     jeuEl.style.background = "";
     var dec = th || (on ? "img/deco0.webp" : "img/fond.webp");   // deco0 = le décor du jeu sans le cadre doré
     decoFlou.style.backgroundImage = 'url("' + dec + '")'; decoNet.style.backgroundImage = 'url("' + dec + '")';
-    [decoNet, decoG, decoD].forEach(function (d) { d.style.backgroundImage = (LARGE ? on || d === decoNet : d === decoNet && th) ? 'url("' + dec + '")' : 'none'; d.style.backgroundSize = th || on ? "cover" : "141.24% 113.12%"; d.style.backgroundPosition = th || on ? "center" : "50% 50.86%"; });
+    [decoNet, decoG, decoD].forEach(function (d) { d.style.backgroundImage = (LARGE ? on || d === decoNet : d === decoNet && th) ? 'url("' + dec + '")' : 'none'; d.style.backgroundSize = th || on ? (LARGE ? "105% auto" : "cover") : "141.24% 113.12%";   /* ordinateur : on coupe les bords de l'image pour que les raccords ne fassent pas de ligne */ d.style.backgroundPosition = th || on ? "center" : "50% 50.86%"; });
   }
   function bx(x) { return OX + (x - .146 * 640) / (.708 * 640) * PW; }
   function by(y) { return (y - .059 * 1133) / (.884 * 1133) * H; }
