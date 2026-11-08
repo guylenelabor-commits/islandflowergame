@@ -1198,7 +1198,40 @@
       boutonRetour();
     }, 450);
   }
+  // ---------- 8 nov. : niveaux payants : 1 à 100 gratuits, puis chaque tranche de 100 niveaux = 2,99 $ (Stripe Olokun Aset) ----------
+  var PAY_URL = "https://buy.stripe.com/8x28wP6KW6Td4YZ1hQgjC0t", packs = [];
+  try { if (/[?&]paye=1/.test(location.search)) history.replaceState(null, "", location.pathname); } catch (e) {}
+  function packDe(n) { return Math.ceil(n / 100); }
+  function niveauOuvert(n) { var k = packDe(n); return k <= 1 || estAdmin || (!!session && packs.indexOf(k) >= 0); }
+  function majPacks(cb) {
+    if (!sb || !session) { packs = []; cb && cb(); return; }
+    sb.rpc("get_my_flower_packs").then(function (r) { if (!r.error && Array.isArray(r.data)) packs = r.data; cb && cb(); }, function () { cb && cb(); });
+  }
+  function verifAchats(suite) {   // compte connecté : on lit d'abord ses achats et son statut, une seule fois par compte
+    if (!sb || !session || verifAchats.fait === session.user.id) return false;
+    verifAchats.fait = session.user.id; afficher('<h2>…</h2>');
+    var nb = 0, fin = function () { if (++nb === 2) suite(); };
+    majPacks(fin); chargerAdmin(fin); return true;
+  }
+  function ecranDebloquer(n) {
+    var k = packDe(n), de = (k - 1) * 100 + 1, a = k * 100;
+    afficher('<h2>🔒 ' + echap(t("lockTitle", { a: de, b: a })) + '</h2><p>' + echap(t("lockTxt", { a: de, b: a })) + '</p>' +
+      (session ? '<button class="gros-bouton" id="payer" type="button">' + echap(t("unlockBtn")) + '</button><button class="second" id="dejapaye" type="button">' + echap(t("alreadyPaid")) + '</button>'
+               : '<p class="petit">' + echap(t("lockLogin")) + '</p><button class="gros-bouton" id="cnx" type="button">' + t("login") + '</button>') +
+      '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
+    boutonRetour();
+    ["payer", "dejapaye", "cnx"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
+    var p = document.getElementById("payer");
+    if (p) p.onclick = function (e) { e.stopPropagation(); bip(660, .08); location.href = PAY_URL + "?client_reference_id=" + encodeURIComponent(session.user.id + "_p" + k) + (session.user.email ? "&prefilled_email=" + encodeURIComponent(session.user.email) : ""); };
+    var d = document.getElementById("dejapaye");
+    if (d) d.onclick = function (e) { e.stopPropagation(); d.textContent = "…"; majPacks(function () { if (niveauOuvert(n)) presentation(n); else d.textContent = t("notYet"); }); };
+    var c = document.getElementById("cnx");
+    if (c) c.onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranCompte("connexion"); };
+  }
   function presentation(n) {
+    var nv = n || Math.min(MAXN, niveau);
+    if (!niveauOuvert(nv) && verifAchats(function () { presentation(n); })) return;
+    if (!niveauOuvert(nv)) { ecranDebloquer(nv); return; }
     n = n || Math.min(MAXN, niveau); D = defNiveau(n); gerbe = -1; manX = manBut = .54; vaseFl = []; fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
     var noms = D.kinds.map(function (k) { return /^f(0[2-9]|1\d|20)$/.test(k) ? t("fc" + k.slice(1)) : nomKind(k, true); }).join(" / ");
     if (D.tout) noms = t("bqAll");
