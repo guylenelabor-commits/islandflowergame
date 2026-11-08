@@ -478,8 +478,8 @@
     var ins = mode === "inscription";
     afficher('<h2>' + (ins ? t("createAcc") : t("login")) + '</h2><form class="sform" id="sf" novalidate>' +
       (ins ? '<label for="sp">' + t("username") + '</label><input id="sp" type="text" maxlength="20" autocomplete="username">' : '') +
-      '<label for="se">' + t("email") + '</label><input id="se" type="email" autocomplete="email">' +
-      '<label for="sw">' + t("password") + '</label><div class="ligne"><input id="sw" type="password" autocomplete="' + (ins ? 'new-password' : 'current-password') + '"><button class="oeil" id="voir" type="button" aria-label="' + echap(t("password")) + '">' + icone("oeil") + '</button></div>' +
+      '<label for="se">' + t("email") + '</label><input id="se" name="email" type="email" autocomplete="' + (ins ? 'email' : 'username') + '">' +
+      '<label for="sw">' + t("password") + '</label><div class="ligne"><input id="sw" name="password" type="password" autocomplete="' + (ins ? 'new-password' : 'current-password') + '"><button class="oeil" id="voir" type="button" aria-label="' + echap(t("password")) + '">' + icone("oeil") + '</button></div>' +
       '<div class="rouge" id="serr"></div><button class="gros-bouton" id="sok" type="submit">' + (ins ? t("create") : t("login")) + '</button></form>' +
       (ins ? '' : '<button class="slien" id="oubli" type="button">' + t("pwForgot") + '</button>') + '<button class="slien" id="sbas" type="button">' + (ins ? t("haveAcc") : t("createAcc")) + '</button><button class="slien" id="ret" type="button">' + t("back") + '</button>');
     var voir = document.getElementById("voir");
