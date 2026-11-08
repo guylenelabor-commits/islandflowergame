@@ -495,7 +495,7 @@
       var pe = ins ? document.getElementById("sp").value.trim() : "";
       if (ins && (pe.length < 3 || pe.length > 20 || /[\s<>"&\/\\]/.test(pe))) { err.textContent = t("vName"); return; }
       if (!em || em.indexOf("@") < 1) { err.textContent = t("vEmail"); return; }
-      if (pw.length < 6) { err.textContent = t("vPass"); return; }
+      if (pw.length < 8) { err.textContent = t("vPass"); return; }
       err.textContent = ""; document.getElementById("sok").disabled = true;
       var pr = ins ? sb.auth.signUp({ email: em, password: pw, options: { data: { username: pe }, emailRedirectTo: location.origin + "/" } }) : sb.auth.signInWithPassword({ email: em, password: pw });
       pr.then(function (r) {
