@@ -10,3 +10,4 @@
 - Musique (8 nov.) : plus de « voix » (filtres de voyelles et vibrato retirés). Nappe douce et grave + petites notes de harpe calmes sur l'accord. Les notes qui montent quand on attrape une fleur sont gardées.
 - Fleurs de cristal (img/nouv, dans un carré) retirées du jeu (8 nov.).
 - Musique : ne monte plus du tout quand on attrape une fleur ; petite note douce au hasard à chaque fleur ; volume baissé (8 nov.).
+- 1000 niveaux (8 nov.) : après le 300, 30 fleurs à attraper puis +1 tous les 70 niveaux (40 au 1000), 54 s + 2 s par fleur en plus. Niveaux cadeaux seulement jusqu'au 300. Serveur : save_my_flowers accepte jusqu'au niveau 1001 et 3000 étoiles.

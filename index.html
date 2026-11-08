@@ -238,7 +238,7 @@
 <script>
 (function () {
   "use strict";
-  var GN = 22, CADEAUX = ["rose:rouge", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10"], MAXN = 300, VIES_DES = 200, EPINES_DES = 200, PIQUANTES_DES = 250;
+  var GN = 22, CADEAUX = ["rose:rouge", "f02", "f03", "f04", "f05", "f06", "f07", "f08", "f09", "f10"], MAXN = 1000, VIES_DES = 200, EPINES_DES = 200, PIQUANTES_DES = 250;
   var ROSES = {"rouge": [1, 8, 18, 20, 32, 35, 40, 41, 43, 45, 49, 53, 61, 74, 83, 85, 92, 96, 99, 100], "blanc": [2, 27, 50, 77], "rose": [3, 9, 25, 38, 65, 68, 71, 78, 94], "jaune": [4, 23, 28, 39, 76, 87, 90], "violet": [5, 11, 19, 33, 75, 88, 97], "orange": [6, 13, 16, 17, 29, 34, 47, 56, 57, 60, 69, 79, 81, 86, 89, 93], "turquoise": [7, 14, 31, 42, 64, 98], "bleu": [12, 22, 30, 37, 46, 48, 55, 62, 72, 91, 95], "multi": [15, 21, 66], "argent": [24, 36, 80], "bordeaux": [26, 58, 63, 70], "vert": [44, 54, 59, 67, 73, 84], "noir": [51]};
   var FLEURS = []; for (var i = 2; i <= 20; i++) FLEURS.push("f" + (i < 10 ? "0" + i : i));
   var NB_PIQ = 25;
@@ -586,7 +586,7 @@
   function bqHtml(st) { var h = '<div class="bqfl"' + (st ? ' style="' + st + '"' : '') + '>'; for (var i = 1; i <= 10; i++) h += '<img alt="" src="img/fl/' + D.col + '-' + pad(i) + '.webp">'; return h + '</div>'; }
   function defNiveau(n) {
     var d = { n: n, tout: false }, st, list, idx;
-    if (n % 30 === 0) { d.gift = n / 30; d.kinds = [CADEAUX[d.gift - 1]]; d.src = "img/real_" + pad(d.gift) + ".webp"; }
+    if (n % 30 === 0 && n <= 300) { d.gift = n / 30; d.kinds = [CADEAUX[d.gift - 1]]; d.src = "img/real_" + pad(d.gift) + ".webp"; }
     else if (n >= PIQUANTES_DES) { d.kinds = ["g" + pad(1 + (n - PIQUANTES_DES) % GN)]; d.src = "img/" + d.kinds[0] + ".webp"; d.fancy = true; }
     else if (n === MAXN) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
     else if (n >= EPINES_DES) { st = Math.min(3, Math.floor((n - EPINES_DES) / 30)); var sh = "T" + (st + 1); d.kinds = BQ[sh][(n - 1) % 5][0]; d.src = "img/b_" + sh + "_" + ((n - 1) % 5) + ".webp"; }
@@ -595,6 +595,7 @@
     d.thorn = n >= EPINES_DES;
     d.need = n <= 50 ? 5 + Math.floor(3 * (n - 1) / 49) : n < 60 ? 8 : n < 90 ? 9 : n < 100 ? 10 : n < 130 ? 12 : n < 160 ? 13 : n < 190 ? 16 : n < 200 ? 19 : 20 + 3 * Math.floor((n - 200) / 30); if (d.gift) d.need = Math.max(8, d.need);
     d.time = Math.max(20, Math.round(32 - n * 0.04)) + Math.round((d.need - 5) * 1.5); if (n >= 200) d.time = 44 + 3 * Math.floor((n - 200) / 30); d.need += 4; if (n === 300) d.need = 30;
+    if (n > 300) { d.need = Math.min(40, 30 + Math.floor((n - 300) / 70)); d.time = 54 + 2 * (d.need - 30); }   // 8 nov. : 1000 niveaux
     d.every = .9;
     d.chute = Math.max(1.3, 3.2 - n * 0.0065);
     d.pT = Math.max(.3, .5 - n * .0007);
