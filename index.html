@@ -335,9 +335,9 @@
   function cadre() {
     var VW = window.innerWidth, VH = window.innerHeight, vv = window.visualViewport ? window.visualViewport.height : 0;
     if (vv > 100 && vv < VH) VH = vv;
-    var sb = safeBas(), M = VW < 600 ? 0 : 6, h = VH - 2 * M - sb, w = Math.min(VW - 2 * M, Math.round(h * 523 / 1063)); h = Math.round(w * 1063 / 523);
+    var sbas = safeBas(), M = VW < 600 ? 0 : 6, h = VH - 2 * M - sbas, w = Math.min(VW - 2 * M, Math.round(h * 523 / 1063)); h = Math.round(w * 1063 / 523);
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
-    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round((VH - sb - h) / 2) + "px";
+    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round((VH - sbas - h) / 2) + "px";
     taille();
   }
   fondEl.style.backgroundImage = 'url("img/fond.webp")';
@@ -851,12 +851,110 @@
     afficher('<button class="retourK" id="ret" type="button">' + t("back") + '</button><h2>☰ ' + t("menu") + '</h2>' +
       '<button class="gros-bouton" id="mlang" type="button">🌍 ' + echap(cur) + '</button>' +
       (sb && session ? '<p><b>' + echap(pseudo) + '</b></p><button class="gros-bouton" id="mmdp" type="button">🔑 ' + t("pwNewT") + '</button><button class="slien" id="mdeco" type="button">' + t("logout") + '</button>'
-        : '<button class="gros-bouton" id="mlog" type="button">' + t("login") + '</button>') +
+        : '<button class="gros-bouton" id="mlog" type="button">' + t("login") + '</button>') + '<div id="admBox"></div>' +
       '<h2>' + t("howTitle") + '</h2><p class="petit">• ' + t("tipGame") + '</p><p class="petit">• ' + t("vDaily") + '</p><p class="petit">• ' + t("noFiche") + '</p>');
     boutonRetour();
     function b(id, f) { var x = document.getElementById(id); if (x) { x.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); x.onclick = function (e) { e.stopPropagation(); bip(520, .08); f(); }; } }
+    chargerAdmin(function () { var ab = document.getElementById("admBox"); if (ab && estAdmin) { ab.innerHTML = boutonsAdmin(); liensAdmin(ecranMenu); } });
     b("mlang", ecranLangue); b("mmdp", ecranNouveauMdp); b("mlog", function () { ecranCompte("connexion"); });
     b("mdeco", function () { sb.auth.signOut().then(function () { session = null; pseudo = ""; monCode = ""; accueil(); }, function () { accueil(); }); });
+  }
+  // ---------- organisatrice : Maintenance et Surveillance (comme Island Kitchen Game) ----------
+  var JEU_ID = "flower", estAdmin = false, maintJ = { maintenance: false, duration: "" }, bloqueJ = false;
+  var MT = {
+    fr: ["Maintenance en cours", "Le jeu revient bientôt.", "Le jeu revient dans environ {d}.", "Compte bloqué", "Ton compte a été bloqué par l’organisatrice."],
+    en: ["Maintenance in progress", "The game will be back soon.", "The game will be back in about {d}.", "Account blocked", "Your account has been blocked by the organizer."],
+    es: ["Mantenimiento en curso", "El juego vuelve pronto.", "El juego vuelve en unos {d}.", "Cuenta bloqueada", "La organizadora ha bloqueado tu cuenta."],
+    de: ["Wartungsarbeiten", "Das Spiel ist bald wieder da.", "Das Spiel ist in etwa {d} wieder da.", "Konto gesperrt", "Dein Konto wurde von der Organisatorin gesperrt."],
+    it: ["Manutenzione in corso", "Il gioco torna presto.", "Il gioco torna tra circa {d}.", "Account bloccato", "Il tuo account è stato bloccato dall’organizzatrice."],
+    pt: ["Manutenção em curso", "O jogo volta em breve.", "O jogo volta daqui a cerca de {d}.", "Conta bloqueada", "A tua conta foi bloqueada pela organizadora."],
+    nl: ["Onderhoud bezig", "Het spel is binnenkort terug.", "Het spel is over ongeveer {d} terug.", "Account geblokkeerd", "Je account is geblokkeerd door de organisator."],
+    zh: ["正在维护", "游戏很快就会回来。", "游戏大约 {d} 后恢复。", "账号已被封锁", "你的账号已被组织者封锁。"],
+    ar: ["الصيانة جارية", "ستعود اللعبة قريبًا.", "ستعود اللعبة خلال حوالي {d}.", "الحساب محظور", "تم حظر حسابك من قبل المنظِّمة."],
+    ru: ["Идут технические работы", "Игра скоро вернётся.", "Игра вернётся примерно через {d}.", "Аккаунт заблокирован", "Ваш аккаунт заблокирован организатором."],
+    ja: ["メンテナンス中", "ゲームはまもなく再開します。", "ゲームは約 {d} 後に再開します。", "アカウント停止中", "あなたのアカウントは主催者により停止されています。"],
+    hi: ["रखरखाव जारी है", "खेल जल्दी वापस आएगा।", "खेल लगभग {d} में वापस आएगा।", "खाता ब्लॉक है", "आपका खाता आयोजक द्वारा ब्लॉक कर दिया गया है।"]
+  };
+  function mt(i, d) { var L = MT[lang] || MT.en; return (L[i] || MT.en[i]).split("{d}").join(d || ""); }
+  var mv = document.createElement("div"); mv.id = "maintVeil";
+  mv.style.cssText = "position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(10,20,40,.92);color:#fff;text-align:center;font-family:system-ui,sans-serif";
+  document.body.appendChild(mv);
+  function renderVoile() {
+    var maint = maintJ.maintenance && !estAdmin;
+    if (!maint && !bloqueJ) { mv.style.display = "none"; mv.innerHTML = ""; return; }
+    var titre = bloqueJ ? mt(3) : mt(0), txt = bloqueJ ? mt(4) : (maintJ.duration ? mt(2, maintJ.duration) : mt(1));
+    mv.innerHTML = '<div style="max-width:320px;background:#fff7ea;color:#5a3a1a;border-radius:20px;padding:26px 22px"><div style="font-size:42px">' + (bloqueJ ? "⛔" : "🛠") + '</div><h2 style="margin:8px 0 10px;font-size:22px">' + echap(titre) + '</h2><p style="margin:0;font-size:16px">' + echap(txt) + '</p></div>';
+    mv.style.display = "flex";
+  }
+  function chargerMaint() {
+    if (!sb) return;
+    sb.from("jeux_maintenance").select("maintenance,duration").eq("jeu", JEU_ID).maybeSingle().then(function (r) { if (!r.error && r.data) { maintJ = r.data; renderVoile(); } }, function () {});
+  }
+  function chargerAdmin(cb) {
+    if (!sb || !session) { estAdmin = false; renderVoile(); cb && cb(); return; }
+    sb.from("profiles").select("is_admin").eq("id", session.user.id).maybeSingle().then(function (r) { estAdmin = !!(r.data && r.data.is_admin); renderVoile(); cb && cb(); }, function () { cb && cb(); });
+  }
+  function presenceJ() {
+    if (!sb || !session) { bloqueJ = false; renderVoile(); return; }
+    sb.rpc("je_suis_la").then(function (r) { if (!r.error) { bloqueJ = r.data === true; renderVoile(); } }, function () {});
+  }
+  if (sb) {
+    chargerMaint(); sb.auth.getSession().then(function () { chargerAdmin(); presenceJ(); }, function () {});
+    sb.auth.onAuthStateChange(function () { setTimeout(function () { chargerAdmin(); presenceJ(); }, 50); });
+    setInterval(chargerMaint, 120000); setInterval(presenceJ, 120000);
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") { chargerMaint(); presenceJ(); } });
+  }
+  function boutonsAdmin() {
+    return estAdmin ? '<button class="second" id="admMaint" type="button">🛠 Maintenance</button><button class="second" id="admSurv" type="button">🔎 Surveillance</button>' : "";
+  }
+  function liensAdmin(retour) {
+    function b(id, f) { var x = document.getElementById(id); if (x) { x.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); x.onclick = function (e) { e.stopPropagation(); bip(520, .08); f(); }; } }
+    b("admMaint", function () { ecranMaintenance(retour); }); b("admSurv", function () { ecranSurv(retour); });
+  }
+  function ecranMaintenance(retour) {
+    var on = !!maintJ.maintenance;
+    afficher('<h2>🛠 Maintenance</h2><p><b>' + (on ? "Maintenance ACTIVÉE : les joueurs voient l’écran « maintenance »." : "Maintenance désactivée : le jeu est ouvert à tous.") + '</b></p>' +
+      '<label for="mDur" class="petit">Durée prévue (facultatif, ex. 30 min)</label><input id="mDur" type="text" maxlength="40" value="' + echap(maintJ.duration || "") + '" style="width:100%;box-sizing:border-box;font:inherit;padding:10px;border-radius:12px;border:2px solid #f39a2b;margin:6px 0 12px">' +
+      '<button class="gros-bouton" id="mGo" type="button" style="background:' + (on ? "#2fa52a" : "#e8402f") + '">' + (on ? "Désactiver la maintenance" : "Activer la maintenance") + '</button><p class="petit" id="mMsg"></p>' +
+      '<button class="slien" id="ret" type="button">' + t("back") + '</button>');
+    boutonRetour(retour);
+    var go = document.getElementById("mGo"), sur = false; go.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    go.onclick = function (e) {
+      e.stopPropagation();
+      if (!on && !sur) { sur = true; go.textContent = "Confirmer : bloquer le jeu pour tous les joueurs"; return; }
+      var dur = document.getElementById("mDur").value.trim();
+      sb.rpc("set_maintenance_jeu", { p_jeu: JEU_ID, p_on: !on, p_duration: dur }).then(function (r) {
+        if (r.error || r.data !== true) { document.getElementById("mMsg").textContent = "Impossible (réseau ou droits)."; return; }
+        maintJ = { maintenance: !on, duration: dur }; renderVoile(); ecranMaintenance(retour);
+      }, function () { document.getElementById("mMsg").textContent = "Impossible (réseau)."; });
+    };
+  }
+  function quandJ(d) { if (!d) return "—"; try { return new Date(d).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }); } catch (e) { return String(d).slice(0, 16); } }
+  function ecranSurv(retour) {
+    afficher('<h2>🔎 Surveillance</h2><p class="petit" id="svHaut">…</p><div id="svListe" style="text-align:left;max-height:55cqh;overflow:auto"></div><button class="slien" id="ret" type="button">' + t("back") + '</button>');
+    boutonRetour(retour);
+    sb.rpc("admin_joueurs_jeu", { p_jeu: JEU_ID }).then(function (r) {
+      var l = r.error || !r.data ? null : r.data, haut = document.getElementById("svHaut"), liste = document.getElementById("svListe");
+      if (!haut) return;
+      if (!l) { haut.textContent = "Impossible de charger (réseau ou droits)."; return; }
+      var enLigne = l.filter(function (x) { return x.en_ligne; }).length;
+      haut.textContent = l.length + " joueur(s) avec un compte · " + enLigne + " en ligne";
+      if (!l.length) { liste.innerHTML = '<p class="petit">Personne pour l’instant.</p>'; return; }
+      liste.innerHTML = l.map(function (x, i) {
+        var etat = x.bloque_le ? '<b style="color:#d32f2f">bloqué</b>' : x.en_ligne ? '<b style="color:#2fa52a">● en ligne</b>' : '<span style="opacity:.7">hors ligne</span>';
+        var bouton = x.is_admin ? '<b>organisatrice</b>' : '<button type="button" data-i="' + i + '" style="font:inherit;font-size:13px;font-weight:700;border:0;border-radius:10px;padding:5px 9px;color:#fff;background:' + (x.bloque_le ? "#2fa52a" : "#d32f2f") + '">' + (x.bloque_le ? "Débloquer" : "Bloquer") + '</button>';
+        return '<div style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.12)"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span>' + echap(x.username || "—") + ' — ' + etat + '</span>' + bouton + '</div>' +
+          '<div style="font-size:12.5px;line-height:1.45;opacity:.85">' + echap(x.email || "") + '<br>niveau ' + (x.niveau || 0) + ' · ' + (x.points || 0) + ' pts · ★ ' + (x.etoiles || 0) + ' · amis ' + (x.amis || 0) + '<br>inscrit ' + echap(quandJ(x.created_at)) + ' · vu ' + echap(quandJ(x.vu_le || x.last_sign_in_at)) + '</div></div>';
+      }).join("");
+      liste.querySelectorAll("button[data-i]").forEach(function (b) {
+        b.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+        b.onclick = function (e) {
+          e.stopPropagation(); var x = l[Number(b.getAttribute("data-i"))], bloquer = !x.bloque_le;
+          if (!b._sur) { b._sur = true; b.textContent = "Confirmer ?"; return; }
+          sb.rpc("admin_bloquer", { p_id: x.id, p_on: bloquer }).then(function (r2) { if (r2.error || r2.data !== true) { b.textContent = "Échec"; return; } ecranSurv(retour); }, function () { b.textContent = "Échec"; });
+        };
+      });
+    }, function () { var h = document.getElementById("svHaut"); if (h) h.textContent = "Impossible de charger (réseau)."; });
   }
   // ---------- vies ----------
   var LIEN3 = "https://buy.stripe.com/fZu4gzb1ccdx9ff7GegjC0p", LIEN20 = "https://buy.stripe.com/4gMbJ1c5gb9tbnne4CgjC0q";
