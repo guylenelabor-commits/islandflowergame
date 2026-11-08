@@ -348,7 +348,7 @@
       var sh = window.screen ? (VW < 600 ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width)) : 0;
       VH = Math.max(VH, hautEcran(), sh || 0);
     } else if (vv > 100 && vv < VH) VH = vv;
-    var shaut = safe("top"), sbas = safeBas(), M = VW < 600 ? 0 : 6, dispo = VH - 2 * M - shaut - sbas;
+    var shaut = safe("top"), sbas = Math.round(safeBas() * 0.35), M = VW < 600 ? 0 : 6, dispo = VH - 2 * M - shaut - sbas;   // le cadre peut descendre un peu sur la barre d'accueil
     var w = Math.min(VW - 2 * M, Math.round(dispo * 523 / 1063)), h = Math.round(w * 1063 / 523);
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
     phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round(shaut + M + (dispo - h) / 2) + "px";
