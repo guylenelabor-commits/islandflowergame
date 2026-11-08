@@ -684,7 +684,7 @@
   var FY0 = .6, FY1 = .975, femX = .5, femY = .93, femTX = .5, femTY = .93, femDir = 1, PANIER = img("img/panier.webp"), VASE = img("img/vase.webp"), vaseFl = [], gerbe = -1;
   function femEch(y) { return .62 + .38 * (y - FY0) / (FY1 - FY0); }   // plus petite quand elle est au fond de l'allée
   function femHaut(y) { return H * .22 * femEch(y); }   // 8 nov. : jardinière plus petite
-  function panier() { var h = femHaut(femY); return { x: femX * W + femDir * h * .05, y: femY * H - h * .36, w: h * .46 }; }
+  function panier() { var h = femHaut(femY); return { x: femX * W + femDir * h * .05, y: femY * H - h * .34, w: h * .37 };   /* 8 nov. : panier un peu plus petit */ }
   function vasePos() { var h = H * .2, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: W * .12, b: H * .99, h: h, w: w }; }
   function dessineVase(dt) {
     if (!VASE.complete || !VASE.naturalWidth) return; var v = vasePos(), n = Math.min(vaseFl.length, 15), top = v.b - v.h, px = v.x, py = top + v.h * .3;
