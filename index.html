@@ -146,6 +146,12 @@
 <style>
   :root { --nuit:#2b1a3a; --ecume:#fff8ee; --bois:#5a2f3a; --soleil:#ffd23c; --corail:#ff5a6e; --abysse:#2b1a3a; }
   body { background: #2b1a3a; }
+  /* appli installée sur iPhone : l'écran web s'arrête trop tôt en bas (bug d'iOS), on rallonge la page */
+  @media (display-mode: standalone) {
+    html { min-height: calc(100% + env(safe-area-inset-top, 0px)); }
+    body { min-height: calc(100% + env(safe-area-inset-top, 0px)); position: relative; }
+    #phone, #fond { position: absolute !important; }
+  }
   #fond { background: #2b1a3a center / cover no-repeat; filter: blur(16px) saturate(1.25) brightness(.8); }
   #phone { position: fixed; left: 0; top: 0; overflow: visible; border: 0; border-radius: 0; background: url("img/bg.webp") center / 100% 100% no-repeat; box-shadow: none; transform: translateZ(0); }
   #jeu { position: absolute; left: 6.77%; top: 2.8%; width: 86.64%; height: 94.23%; border-radius: 11% / 4.4%; background: transparent; overflow: hidden; container-type: inline-size; }
@@ -331,18 +337,30 @@
     var r = jeuEl.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1); W = Math.max(1, r.width); H = Math.max(1, r.height);
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   }
-  // marge du bas des iPhone (barre d'accueil) : le bas du jeu et le bouton son restent visibles
-  function safeBas() { try { var d = document.createElement("div"); d.style.cssText = "position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden"; document.body.appendChild(d); var h = d.getBoundingClientRect().height; d.remove(); return Math.round(h) || 0; } catch (e) { return 0; } }
+  // marges des iPhone : en haut (heure, batterie, Dynamic Island) et en bas (barre d'accueil)
+  function safe(cote) { try { var d = document.createElement("div"); d.style.cssText = "position:fixed;left:0;top:0;width:0;height:env(safe-area-inset-" + cote + ",0px);visibility:hidden"; document.body.appendChild(d); var h = d.getBoundingClientRect().height; d.remove(); return Math.round(h) || 0; } catch (e) { return 0; } }
+  function safeBas() { return safe("bottom"); }
+  function hautEcran() { try { var d = document.createElement("div"); d.style.cssText = "position:fixed;left:0;top:0;bottom:0;width:0;visibility:hidden"; document.body.appendChild(d); var h = d.getBoundingClientRect().height; d.remove(); return Math.round(h) || 0; } catch (e) { return 0; } }
+  function appli() { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } }
   function cadre() {
     var VW = window.innerWidth, VH = window.innerHeight, vv = window.visualViewport ? window.visualViewport.height : 0;
-    if (vv > 100 && vv < VH) VH = vv;
-    var sbas = safeBas(), M = VW < 600 ? 0 : 6, h = VH - 2 * M - sbas, w = Math.min(VW - 2 * M, Math.round(h * 523 / 1063)); h = Math.round(w * 1063 / 523);
+    if (appli()) {   // appli installée sur iPhone : on prend toute la hauteur de l'écran, jusqu'en bas
+      var sh = window.screen ? (VW < 600 ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width)) : 0;
+      VH = Math.max(VH, hautEcran(), sh || 0);
+    } else if (vv > 100 && vv < VH) VH = vv;
+    var shaut = safe("top"), sbas = safeBas(), M = VW < 600 ? 0 : 6, dispo = VH - 2 * M - shaut - sbas;
+    var w = Math.min(VW - 2 * M, Math.round(dispo * 523 / 1063)), h = Math.round(w * 1063 / 523);
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
-    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round((VH - sbas - h) / 2) + "px";
+    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round(shaut + M + (dispo - h) / 2) + "px";
+    fondEl.style.bottom = (-40 - Math.max(0, VH - window.innerHeight)) + "px";   // le fond flou descend lui aussi jusqu'en bas
     taille();
   }
   fondEl.style.backgroundImage = 'url("img/fond.webp")';
-  window.addEventListener("resize", cadre); cadre();
+  window.addEventListener("resize", cadre); window.addEventListener("orientationchange", function () { setTimeout(cadre, 300); });
+  window.addEventListener("pageshow", cadre); window.addEventListener("load", cadre);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", cadre);
+  setTimeout(cadre, 400); setTimeout(cadre, 1500);   // l'iPhone donne parfois la bonne taille un peu après l'ouverture
+  cadre();
   // ---------- sons ----------
   var actx = null;
   function bip(f, d, type, vol, glisse) {
