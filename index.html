@@ -183,6 +183,7 @@
   .voile.acc .infos { color: #7a2f52; text-shadow: none; }
   .voile.acc .petit { color: #7a2f52; text-shadow: none; }
   .bqimg { width: 58cqw; max-height: 58cqw; object-fit: contain; filter: drop-shadow(0 1.4cqw 1.6cqw rgba(90,30,60,.3)); }
+  .bqfl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1cqw; width: 66cqw; align-self: center; } .bqfl img { width: 100%; aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 .6cqw .6cqw rgba(90,30,60,.25)); }
   .bqimg.fete { animation: fete 1.2s ease-out both; }
   @keyframes fete { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.12) rotate(3deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
   .nomBq { font-family: var(--display); font-weight: 700; font-size: 5.6cqw; color: #c2406e; line-height: 1.1; }
@@ -573,12 +574,15 @@
   }
   // ---------- règles des niveaux ----------
   function nomKind(k, tout) {
+    if (k.indexOf("c:") === 0) return t("fcl_" + k.slice(2));
     if (k === "rose:*") return tout ? t("fn01") : roseNom("multi");
     if (k.indexOf("rose:") === 0) return roseNom(k.slice(5));
     if (k.charAt(0) === "g") return t("fancy", { n: parseInt(k.slice(1), 10) });
     return t("fn" + k.slice(1));
   }
   function roseNom(g) { var s = t("roseFmt", { c: t("cl_" + g) }); return s.charAt(0).toUpperCase() + s.slice(1); }
+  var COULS = "rouge jaune bleu rose blanc orange violet vert turquoise corail lilas ambre bleufonce menthe peche bordeaux emeraude lavande irise nacre".split(" ");   // 8 nov. : à chaque niveau, une couleur : les 10 fleurs de cette couleur sont celles à attraper
+  function bqHtml(st) { var h = '<div class="bqfl"' + (st ? ' style="' + st + '"' : '') + '>'; for (var i = 1; i <= 10; i++) h += '<img alt="" src="img/fl/' + D.col + '-' + pad(i) + '.webp">'; return h + '</div>'; }
   function defNiveau(n) {
     var d = { n: n, tout: false }, st, list, idx;
     if (n % 30 === 0) { d.gift = n / 30; d.kinds = [CADEAUX[d.gift - 1]]; d.src = "img/real_" + pad(d.gift) + ".webp"; }
@@ -586,6 +590,7 @@
     else if (n === MAXN) { d.tout = true; d.kinds = TOUT; d.src = "img/b_BIG_0.webp"; }
     else if (n >= EPINES_DES) { st = Math.min(3, Math.floor((n - EPINES_DES) / 30)); var sh = "T" + (st + 1); d.kinds = BQ[sh][(n - 1) % 5][0]; d.src = "img/b_" + sh + "_" + ((n - 1) % 5) + ".webp"; }
     else { st = Math.floor((n - 1) / 30); var s2 = SHEETS[st]; list = BQ[s2]; idx = (n - 1) % list.length; d.kinds = list[idx][0]; d.src = "img/b_" + s2 + "_" + idx + ".webp"; }
+    d.col = COULS[(n - 1) % COULS.length]; d.kinds = ["c:" + d.col]; d.tout = false;
     d.thorn = n >= EPINES_DES;
     d.need = n <= 50 ? 5 + Math.floor(3 * (n - 1) / 49) : n < 60 ? 8 : n < 90 ? 9 : n < 100 ? 10 : n < 130 ? 12 : n < 160 ? 13 : n < 190 ? 16 : n < 200 ? 19 : 20 + 3 * Math.floor((n - 200) / 30); if (d.gift) d.need = Math.max(8, d.need);
     d.time = Math.max(20, Math.round(32 - n * 0.04)) + Math.round((d.need - 5) * 1.5); if (n >= 200) d.time = 44 + 3 * Math.floor((n - 200) / 30); d.need += 4; if (n === 300) d.need = 30;
@@ -599,6 +604,7 @@
   }
   function matche(k, kinds) { if (kinds.indexOf(k) >= 0) return true; return k.indexOf("rose:") === 0 && kinds.indexOf("rose:*") >= 0; }
   function imageDe(k, thorn) {
+    if (k.indexOf("c:") === 0) return "img/fl/" + k.slice(2) + "-" + pad(1 + Math.floor(Math.random() * 10)) + ".webp";
     if (k.indexOf("rose:") === 0) {
       if (thorn) return "img/t01.webp";
       var g = k.slice(5), a = ROSES[g]; if (!a) { g = pick(Object.keys(ROSES)); a = ROSES[g]; }
@@ -1067,7 +1073,7 @@
     function ecranGagne() {
       hud.hidden = true;
       var dernier = D.n >= MAXN;
-      afficher((false ? '' : '<h2>' + t("done") + '</h2><img class="bqimg fete" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
+      afficher((false ? '' : '<h2>' + t("done") + '</h2>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div>') + '<div class="etoiles">' + etxt + '</div><p class="petit">+' + pts + ' · ' + t("level", { n: D.n }) + '</p>' +
         (dernier ? '<p>🌸 ' + t("soon") + '</p>' : '<button class="gros-bouton" id="suiv" type="button">' + t("next") + '</button>') +
         '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
       var dl = document.getElementById("dlf"); if (dl) { dl.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); dl.onclick = function (e) { e.stopPropagation(); telechargerFiche(D.gift); }; }
@@ -1079,7 +1085,7 @@
     if (fini) return; creditCristal(); fin(); bip(220, .4, "sawtooth", .07, 90); if (raison !== "vies") depenserVie();
     setTimeout(function () {
       hud.hidden = true;
-      afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2><img class="bqimg" alt="" src="' + D.src + '" style="opacity:.55"><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
+      afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2>' + bqHtml("opacity:.55") + '<p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
       var b = document.getElementById("rej"); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); if (viesTotal() <= 0) ecranSansVies(); else presentation(D.n); };
       boutonRetour();
     }, 450);
@@ -1088,7 +1094,7 @@
     n = n || Math.min(MAXN, niveau); D = defNiveau(n); fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
     var noms = D.kinds.map(function (k) { return /^f(0[2-9]|1\d|20)$/.test(k) ? t("fc" + k.slice(1)) : nomKind(k, true); }).join(" / ");
     if (D.tout) noms = t("bqAll");
-    afficher('<h2>' + t("level", { n: n }) + '</h2><img class="bqimg" alt="" src="' + D.src + '"><div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
+    afficher('<h2>' + t("level", { n: n }) + '</h2>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
       '<p class="petit">' + t("tipGame") + '</p>' + '<p class="petit">' + t("tipLife", { n: D.vies }) + '</p>' + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
       '<p class="petit">' + t("secs", { t: D.time }) + '</p><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="go" type="button">' + t("go") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
     boutonRetour();
@@ -1099,6 +1105,7 @@
     caught = 0; fautes = 0; prises = []; nbBrille = 0; cris = { sp: 0, got: 0, paye: false }; tFl = 0; vies = D.vies; tLeft = D.time; tAcc = D.every * .6; fini = false; pause = false; enJeu = true; fl = [];
     voile.hidden = true; hud.hidden = false; elChrono.hidden = false; jeuEl.classList.remove("sur-accueil"); majHud();
     // pré-charger les images de ce niveau
+    for (var pi = 1; pi <= 10; pi++) img("img/fl/" + D.col + "-" + pad(pi) + ".webp");
     kindsBons(D).concat(kindsAutres(D)).slice(0, 60).forEach(function (k) { if (k.indexOf("rose:") !== 0) img(imageDe(k, D.thorn)); });
     cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle);
   }

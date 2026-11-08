@@ -6,3 +6,4 @@
 - Fleur du temps (img/temps.webp, blanche avec une horloge) : lancée par le jardinier quand le temps baisse. 1 par partie, 2 à partir du niveau 100, 3 à partir du 200. Elle rend 20 % du temps du niveau.
 - Contour vert sur les fleurs à attraper (le halo doré est retiré).
 - La pause est une petite carte transparente en haut.
+- Fleurs à attraper : 20 couleurs × 10 fleurs (img/fl/<couleur>-01..10.webp). À chaque niveau, une seule couleur : les 10 fleurs de cette couleur sont les bonnes, mélangées avec les anciennes fleurs du jeu (les mauvaises). Ordre des couleurs (revient tous les 20 niveaux) : rouge, jaune, bleu, rose, blanc, orange, violet, vert, turquoise, corail, lilas, ambre (doré), bleu foncé, menthe, pêche, bordeaux, émeraude, lavande, irisé, nacre. L'écran du niveau montre les 10 fleurs.
