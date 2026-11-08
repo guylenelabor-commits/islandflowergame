@@ -330,12 +330,14 @@
     var r = jeuEl.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1); W = Math.max(1, r.width); H = Math.max(1, r.height);
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   }
+  // marge du bas des iPhone (barre d'accueil) : le bas du jeu et le bouton son restent visibles
+  function safeBas() { try { var d = document.createElement("div"); d.style.cssText = "position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden"; document.body.appendChild(d); var h = d.getBoundingClientRect().height; d.remove(); return Math.round(h) || 0; } catch (e) { return 0; } }
   function cadre() {
     var VW = window.innerWidth, VH = window.innerHeight, vv = window.visualViewport ? window.visualViewport.height : 0;
     if (vv > 100 && vv < VH) VH = vv;
-    var M = VW < 600 ? 0 : 6, h = VH - 2 * M, w = Math.min(VW - 2 * M, Math.round(h * 523 / 1063)); h = Math.round(w * 1063 / 523);
+    var sb = safeBas(), M = VW < 600 ? 0 : 6, h = VH - 2 * M - sb, w = Math.min(VW - 2 * M, Math.round(h * 523 / 1063)); h = Math.round(w * 1063 / 523);
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
-    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round((VH - h) / 2) + "px";
+    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = Math.round((VH - sb - h) / 2) + "px";
     taille();
   }
   fondEl.style.backgroundImage = 'url("img/fond.webp")';
