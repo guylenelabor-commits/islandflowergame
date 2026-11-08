@@ -668,9 +668,9 @@
     phoneEl.style.backgroundImage = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")';
     fondEl.style.backgroundImage = 'url("' + (th || (on ? "img/fond_jeu.webp" : "img/fond.webp")) + '")';
     jeuEl.style.background = th && !LARGE ? 'url("' + th + '") center / cover no-repeat' : "";
-    var dec = th || (on ? "img/fond_jeu.webp" : "img/fond.webp");
+    var dec = th || (on ? "img/deco0.webp" : "img/fond.webp");   // deco0 = le décor du jeu sans le cadre doré
     decoFlou.style.backgroundImage = 'url("' + dec + '")'; decoNet.style.backgroundImage = 'url("' + dec + '")';
-    [decoNet, decoG, decoD].forEach(function (d) { d.style.backgroundImage = on || d === decoNet ? 'url("' + dec + '")' : 'none'; d.style.backgroundSize = th ? "cover" : "141.24% 113.12%"; d.style.backgroundPosition = th ? "center" : "50% 50.86%"; });
+    [decoNet, decoG, decoD].forEach(function (d) { d.style.backgroundImage = on || d === decoNet ? 'url("' + dec + '")' : 'none'; d.style.backgroundSize = th || on ? "cover" : "141.24% 113.12%"; d.style.backgroundPosition = th || on ? "center" : "50% 50.86%"; });
   }
   function bx(x) { return OX + (x - .146 * 640) / (.708 * 640) * PW; }
   function by(y) { return (y - .059 * 1133) / (.884 * 1133) * H; }
@@ -686,10 +686,11 @@
     tPerso += dt; kickM = Math.max(0, kickM - dt * 3); kickF = Math.max(0, kickF - dt * 2.6); hurtF = Math.max(0, hurtF - dt * 3);
     var ax = femX, ay = femY;   // 8 nov. : c'est le joueur qui la fait courir (droite, gauche, vers le fond, vers l'avant)
     if (enJeu && !fini && !pause) { femX += Math.max(-dt * .95, Math.min(dt * .95, femTX - femX)); femY += Math.max(-dt * .6, Math.min(dt * .6, femTY - femY)); }
-    else if (gerbe >= 0) { femY += Math.max(-dt * .5, Math.min(dt * .5, .95 - femY)); }   // 8 nov. : pour danser, elle revient devant, sur le sol
+    else if (gerbe >= 0) { femY += Math.max(-dt * .5, Math.min(dt * .5, .95 - femY)); femX += Math.max(-dt * .5, Math.min(dt * .5, (LARGE ? .62 : .58) - femX)); }   // 8 nov. : elle danse au sol, loin du vase   // 8 nov. : pour danser, elle revient devant, sur le sol
     femV = dt > 0 ? (femX - ax) / dt * W : 0; var femVY = dt > 0 ? (femY - ay) / dt : 0; if (Math.abs(femX - ax) > 1e-4) femDir = femX < ax ? -1 : 1;
     var bouge = Math.abs(femV) > PW * .05 || Math.abs(femVY) > .05;
-    var mav = manX; if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .14 + Math.random() * .72; manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
+    var mav = manX; if (gerbe >= 0 && LARGE) manX += Math.max(-dt * .6, Math.min(dt * .6, -.75 - manX));   // ordinateur : il va danser sur le côté, pas derrière la carte
+    if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .14 + Math.random() * .72; manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
     var MI = MANS[kickM > .5 ? (manDir < 0 ? 4 : 2) : Math.abs(manV) > .05 ? (manV < 0 ? 0 : 1) : 3], MD = gerbe >= 0 ? MAND[Math.floor(gerbe * 2.5) % MAND.length] : null; if (MD && MD.complete && MD.naturalWidth) MI = MD; else MD = null;   // 8 nov. : il danse aussi quand le bouquet est complet
     if (MI && MI.complete && MI.naturalWidth) {
       var mhh = (by(349) - by(106)) * .78 * (MD ? MI.naturalHeight / 473 : 1),   /* 8 nov. : jardinier plus petit */ mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
@@ -1162,7 +1163,7 @@
     }, 450);
   }
   function presentation(n) {
-    n = n || Math.min(MAXN, niveau); D = defNiveau(n); fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
+    n = n || Math.min(MAXN, niveau); D = defNiveau(n); gerbe = -1; manX = manBut = .54; vaseFl = []; fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
     var noms = D.kinds.map(function (k) { return /^f(0[2-9]|1\d|20)$/.test(k) ? t("fc" + k.slice(1)) : nomKind(k, true); }).join(" / ");
     if (D.tout) noms = t("bqAll");
     afficher('<h2>' + t("level", { n: n }) + '</h2><div class="modes"><button type="button" id="mN" class="' + (modeDur ? '' : 'on') + '">' + t("modeN") + '</button><button type="button" id="mD" class="' + (modeDur ? 'on' : '') + '">' + t("modeD") + '</button></div>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
