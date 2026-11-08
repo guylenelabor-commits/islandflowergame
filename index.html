@@ -386,26 +386,27 @@
   function impulse(c) { var len = Math.floor(c.sampleRate * 4.5), b = c.createBuffer(2, len, c.sampleRate); for (var ch = 0; ch < 2; ch++) { var d = b.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); } return b; }
   function musBuild() {
     var c = actx, master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
-    var bus = c.createGain(), dry = c.createGain(), wet = c.createGain(), rev = c.createConvolver(); rev.buffer = impulse(c); dry.gain.value = .55; wet.gain.value = .9;
+    var bus = c.createGain(), dry = c.createGain(), wet = c.createGain(), rev = c.createConvolver(); rev.buffer = impulse(c); dry.gain.value = .6; wet.gain.value = .55;
     bus.connect(dry); dry.connect(master); bus.connect(rev); rev.connect(wet); wet.connect(master);
-    [[700, 3, .5], [1100, 4, .35], [2700, 5, .15]].forEach(function (f) { var bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f[0]; bp.Q.value = f[1]; var g = c.createGain(); g.gain.value = f[2]; bus.connect(bp); bp.connect(g); g.connect(master); });
+    // 8 nov. : plus de « voix » (filtres de voyelles retirés) : musique douce et reposante
     mus = { master: master, bus: bus, rev: rev, idx: 0, timers: [], shift: 0, oscs: [] };
   }
   function musChord(notes) {
-    var c = actx, t0 = c.currentTime, T = 9;
+    var c = actx, t0 = c.currentTime, T = 12;
     notes.forEach(function (m, k) {
-      var f = mf(m + mus.shift), vg = c.createGain(), lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400; vg.connect(lp); lp.connect(mus.bus);
-      var lv = (m < 55 ? .5 : 1) * .05; vg.gain.setValueAtTime(0, t0); vg.gain.linearRampToValueAtTime(lv, t0 + 4); vg.gain.setValueAtTime(lv, t0 + T); vg.gain.linearRampToValueAtTime(0, t0 + T + 4.5);
-      var lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 4.2 + Math.random(); lg.gain.value = f * .0035; lfo.connect(lg);
-      [["sine", -5, 1], ["triangle", 6, .28], ["sine", 1200 / 1, 0]].slice(0, 2).forEach(function (o) {
+      var f = mf(m + mus.shift), vg = c.createGain(), lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900; vg.connect(lp); lp.connect(mus.bus);
+      var lv = (m < 55 ? .6 : 1) * .028; vg.gain.setValueAtTime(0, t0); vg.gain.linearRampToValueAtTime(lv, t0 + 4); vg.gain.setValueAtTime(lv, t0 + T); vg.gain.linearRampToValueAtTime(0, t0 + T + 4.5);
+      var lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = .15 + Math.random() * .1; lg.gain.value = f * .0006; lfo.connect(lg);
+      [["sine", -4, 1], ["sine", 4, .6]].forEach(function (o) {
         var osc = c.createOscillator(), og = c.createGain(); osc.type = o[0]; osc.frequency.value = f; osc.detune.value = o[1] + (k % 2 ? 2 : -2); og.gain.value = o[2]; lg.connect(osc.frequency); mus.oscs.push({ o: osc, base: mf(m), end: t0 + T + 5 }); osc.connect(og); og.connect(vg); osc.start(t0); osc.stop(t0 + T + 5);
       });
       lfo.start(t0); lfo.stop(t0 + T + 5);
     });
   }
   function musBell() {
-    if (!mus || !sonOn) return; var c = actx, t0 = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = mf(PENTA[Math.floor(Math.random() * PENTA.length)] + mus.shift);
-    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.022, t0 + .08); g.gain.exponentialRampToValueAtTime(.0001, t0 + 5); o.connect(g); g.connect(mus.bus); o.start(t0); o.stop(t0 + 5.2);
+    if (!mus || !sonOn) return; var c = actx, t0 = c.currentTime, ch = CHORDS[(mus.idx + CHORDS.length - 1) % CHORDS.length], m = ch[2 + Math.floor(Math.random() * (ch.length - 2))] + 12;   // petite harpe douce sur les notes de l'accord
+    [[1, .02], [2, .005]].forEach(function (h) { var o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = mf(m + mus.shift) * h[0];
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(h[1], t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + 3); o.connect(g); g.connect(mus.bus); o.start(t0); o.stop(t0 + 3.1); });
   }
 
   function chime(n) {
@@ -436,8 +437,8 @@
       actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume();
       if (!mus) {
         musBuild(); musChord(CHORDS[0]); mus.idx = 1;
-        mus.timers.push(setInterval(function () { if (!sonOn || document.hidden) return; musChord(CHORDS[mus.idx % CHORDS.length]); mus.idx++; }, 9000));
-        mus.timers.push(setInterval(function () { if (!document.hidden) musBell(); }, 5200));
+        mus.timers.push(setInterval(function () { if (!sonOn || document.hidden) return; musChord(CHORDS[mus.idx % CHORDS.length]); mus.idx++; }, 12000));
+        mus.timers.push(setInterval(function () { if (!document.hidden && Math.random() < .7) musBell(); }, 1700));
       }
       mus.master.gain.cancelScheduledValues(actx.currentTime); mus.master.gain.setTargetAtTime(.9, actx.currentTime, 1.5);
     } catch (e) {}
