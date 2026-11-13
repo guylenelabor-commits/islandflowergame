@@ -12,7 +12,35 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Island Flower">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<style>html,body{margin:0;background:#2b1a3a}  .voile.acc .second { border: 0; border-radius: 5cqw; background: rgba(255,255,255,.92); color: #0d5d93; font: inherit; font-size: 4.2cqw; font-weight: 800; padding: 2cqw 0; box-shadow: 0 .8cqw 0 rgba(0,0,0,.25); }
+<style>html,body{margin:0;background:#2b1a3a}
+  #tvLobby { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 9000; background: rgba(255,255,255,.94); border-radius: 16px; padding: 22px 14px 10px; box-shadow: 0 6px 22px rgba(0,0,0,.25); font: 700 14px Nunito, system-ui, sans-serif; color: #5a3a1a; text-align: center; max-width: 96vw; box-sizing: border-box; }
+  #tvLobby[hidden] { display: none; }
+  #tvLobby .tvX { position: absolute; top: 2px; right: 8px; border: 0; background: none; font: 700 24px system-ui, sans-serif; color: #5a3a1a; cursor: pointer; }
+  #tvLobby .tvPl { display: flex; gap: 12px; justify-content: center; }
+  #tvLobby .tvP { border: 3px solid; border-radius: 12px; padding: 6px 8px; width: 132px; background: #fff; }
+  #tvLobby .tvP.pris { background: #f1ffe9; }
+  #tvLobby .tvQ svg { width: 112px; height: 112px; display: block; margin: 4px auto; }
+  #tvLobby .tvEnvT { margin-top: 8px; }
+  #tvLobby .tvEnvs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+  #tvLobby .tvEnvs button { width: 54px; height: 38px; border-radius: 8px; border: 3px solid transparent; background-size: cover; background-position: center; cursor: pointer; padding: 0; }
+  #tvLobby .tvEnvs button.ici { border-color: #2faa3a; box-shadow: 0 0 0 2px #fff, 0 0 10px #2faa3a; }
+  #tvLobby .tvT { margin-top: 8px; }
+  .tvCur { position: fixed; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%; border: 4px solid; z-index: 9800; pointer-events: none; opacity: 0; transition: opacity .3s; }
+  .tvCur.vu { opacity: 1; } .tvCur.clic { background: rgba(255,255,255,.45); }
+  #fete { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 8000; }
+  #fete[hidden] { display: none; }
+  body.modeMan #phone, body.modeMan #fond { display: none !important; }
+  #manette { position: fixed; inset: 0; z-index: 9500; display: flex; flex-direction: column; gap: 12px; padding: 18px 16px 22px; box-sizing: border-box; background: linear-gradient(#f7d6e4, #e9a8c4 55%, #b9658e); font-family: Nunito, system-ui, sans-serif; color: #fff; }
+  #manette .mHaut { display: flex; justify-content: space-between; align-items: center; font-size: 18px; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  #manette .mHaut span { font-size: 14px; font-weight: 800; }
+  #manette .mInfo { text-align: center; font-weight: 800; font-size: 18px; min-height: 26px; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  #manette .mCoul { text-align: center; font-weight: 700; font-size: 14px; opacity: .95; }
+  #manette .mPad { flex: 1; border-radius: 18px; background: rgba(255,255,255,.18); border: 3px dashed; display: flex; align-items: center; justify-content: center; text-align: center; padding: 14px; font-weight: 800; font-size: 16px; touch-action: none; }
+  #manette button { border: 0; border-radius: 18px; font: 800 20px Nunito, system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+  #manette .mOk { padding: 16px; background: #2faa3a; color: #fff; box-shadow: 0 5px 0 #1d7a26; }
+  #manette .mOk[hidden] { display: none; }
+  #manette .mBas { display: flex; gap: 10px; }
+  #manette .mBas button { flex: 1; padding: 12px 6px; font-size: 14px; background: rgba(255,255,255,.92); color: #8a3a62; }  .voile.acc .second { border: 0; border-radius: 5cqw; background: rgba(255,255,255,.92); color: #0d5d93; font: inherit; font-size: 4.2cqw; font-weight: 800; padding: 2cqw 0; box-shadow: 0 .8cqw 0 rgba(0,0,0,.25); }
   .sform { text-align: left; }
   .sform label { display: block; font-size: 3.6cqw; font-weight: 800; margin: 2cqw 0 .8cqw; }
   .sform input { width: 100%; box-sizing: border-box; border: .5cqw solid #f39a2b; border-radius: 3cqw; padding: 2cqw 2.5cqw; font: inherit; font-size: 4.4cqw; color: #4a2a00; background: #fff; }
@@ -404,17 +432,19 @@
     }
     LARGE = VW >= 900 && VW > VH * 1.15 && !("ontouchstart" in window && VW < 1100); document.body.classList.toggle("large", LARGE);
     if (LARGE) {   // ordinateur : grand écran large ; la colonne du milieu garde les proportions du téléphone
-      h = VH - 24; w = Math.min(VW - 24, Math.round(h * 1.78)); haut = 12;
+      h = VH - 24; w = VW - 24; haut = 12;   // 12 nov. : le jeu prend toute la largeur, de bord à bord (pour la télé surtout)
       var jw = Math.round(h * 505 / 1001); jeuEl.style.left = Math.round((w - jw) / 2) + "px"; jeuEl.style.width = jw + "px";
       var jl = Math.round((w - jw) / 2); decoNet.style.left = jl + "px"; decoNet.style.width = jw + "px";
-      [[decoG, jl - jw], [decoD, jl + jw]].forEach(function (d) { d[0].style.left = d[1] + "px"; d[0].style.width = jw + "px"; });
+      // le décor continue jusqu'aux bords, en miroir
+      decoG.style.left = "0px"; decoG.style.width = jl + "px"; decoD.style.left = (jl + jw) + "px"; decoD.style.width = (w - jl - jw) + "px";
+      JW = jw; [decoG, decoD].forEach(function (d) { d.style.backgroundRepeat = "repeat-x"; d.style.backgroundSize = Math.round(jw * 1.05) + "px auto"; d.style.backgroundPosition = d === decoG ? "left center" : "right center"; });
     } else { jeuEl.style.left = ""; jeuEl.style.width = ""; decoNet.style.left = ""; decoNet.style.width = ""; }
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
     phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = haut + "px";
     fondEl.style.bottom = (-40 - Math.max(0, VH - window.innerHeight)) + "px";   // le fond flou descend lui aussi jusqu'en bas
     taille();
   }
-  var decoFlou = document.getElementById("decoFlou"), decoNet = document.getElementById("decoNet"), decoG = document.getElementById("decoG"), decoD = document.getElementById("decoD");
+  var JW = 0, decoFlou = document.getElementById("decoFlou"), decoNet = document.getElementById("decoNet"), decoG = document.getElementById("decoG"), decoD = document.getElementById("decoD");
   fondEl.style.backgroundImage = 'url("img/fond.webp")';
   window.addEventListener("resize", cadre); window.addEventListener("orientationchange", function () { setTimeout(cadre, 300); });
   window.addEventListener("pageshow", cadre); window.addEventListener("load", cadre);
@@ -702,7 +732,8 @@
     jeuEl.style.background = "";
     var dec = th || (on ? "img/deco0.webp" : "img/fond.webp");   // deco0 = le décor du jeu sans le cadre doré
     decoFlou.style.backgroundImage = 'url("' + dec + '")'; decoNet.style.backgroundImage = 'url("' + dec + '")';
-    [decoNet, decoG, decoD].forEach(function (d) { d.style.backgroundImage = (LARGE ? on || d === decoNet : d === decoNet && th) ? 'url("' + dec + '")' : 'none'; d.style.backgroundSize = th || on ? (LARGE ? "105% auto" : "cover") : "141.24% 113.12%";   /* ordinateur : on coupe les bords de l'image pour que les raccords ne fassent pas de ligne */ d.style.backgroundPosition = th || on ? "center" : "50% 50.86%"; });
+    [decoNet, decoG, decoD].forEach(function (d) { d.style.backgroundImage = (LARGE ? on || d === decoNet : d === decoNet && th) ? 'url("' + dec + '")' : 'none'; d.style.backgroundSize = th || on ? (LARGE ? "105% auto" : "cover") : "141.24% 113.12%";   /* ordinateur : on coupe les bords de l'image pour que les raccords ne fassent pas de ligne */ d.style.backgroundPosition = th || on ? "center" : "50% 50.86%";
+      if (LARGE && d !== decoNet && JW) { d.style.backgroundRepeat = "repeat-x"; d.style.backgroundSize = Math.round(JW * 1.05) + "px auto"; d.style.backgroundPosition = d === decoG ? "left center" : "right center"; } });   // 12 nov. : le décor continue jusqu'aux bords
   }
   function bx(x) { return OX + (x - .146 * 640) / (.708 * 640) * PW; }
   function by(y) { return (y - .059 * 1133) / (.884 * 1133) * H; }
@@ -1055,6 +1086,7 @@
       }, function () { er.textContent = t("eGeneric"); });
     };
   }
+  function niveauOuvert(n) { return (typeof TV !== "undefined" && TV && TV.on && TV.acces) || niveauOuvert0(n); }
   // ---------- menu (comme Island Kitchen Game) ----------
 
   // 9 nov. 2026 : le Menu se déroule sous son bouton, replié, une partie ouverte à la fois
@@ -1084,6 +1116,7 @@
     var cur = LANGS.filter(function (l) { return l[0] === lang; })[0][1], it = [{ txt: echap(cur), f: ecranLangue }];
     if (sb && session) { it.push({ txt: t("pwNewT"), f: ecranNouveauMdp }); it.push({ txt: t("logout"), f: function () { sb.auth.signOut().then(function () { session = null; pseudo = ""; monCode = ""; accueil(); }, function () { accueil(); }); } }); }
     else it.push({ txt: t("login"), f: function () { ecranCompte("connexion"); } });
+    it.push({ txt: lang === "fr" ? "Jouer sur la télé" : "Play on the TV", f: ecranTele });
     it.push({ txt: t("howTitle"), sous: '<p>' + t("tipGame") + '</p><p>' + t("vDaily") + '</p><p>' + t("noFiche") + '</p>' });
     it.push({ html: '<div id="admBox"></div>' }); it.push("-"); it.push({ txt: "← " + t("back") });
     var d = menuDeroule(ancre, it); if (!d) return;
@@ -1262,7 +1295,7 @@
   var PAY_URL = "https://buy.stripe.com/8x28wP6KW6Td4YZ1hQgjC0t", packs = [];
   try { if (/[?&]paye=1/.test(location.search)) history.replaceState(null, "", location.pathname); } catch (e) {}
   function packDe(n) { return Math.ceil(n / 100); }
-  function niveauOuvert(n) { var k = packDe(n); return k <= 1 || estAdmin || (!!session && packs.indexOf(k) >= 0); }
+  function niveauOuvert0(n) { var k = packDe(n); return k <= 1 || estAdmin || (!!session && packs.indexOf(k) >= 0); }
   function majPacks(cb) {
     if (!sb || !session) { packs = []; cb && cb(); return; }
     sb.rpc("get_my_flower_packs").then(function (r) { if (!r.error && Array.isArray(r.data)) packs = r.data; cb && cb(); }, function () { cb && cb(); });
@@ -1321,11 +1354,205 @@
   var menuBtn = document.getElementById("menuBtn");
   menuBtn.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
   menuBtn.onclick = function (e) { e.stopPropagation(); menu(); };
-  window.IFL_DBG = { get fl() { return fl; }, get caught() { return caught; }, get D() { return D; }, posDe: function (f) { return posDe(f); }, get panier() { return panierFl.length; }, get vase() { return vaseFl.length; }, get fem() { return [femX, femY]; }, presentation: function (n) { presentation(n); }, demarrer: function () { demarrer(); } };
+  window.IFL_DBG = { get tv() { return TV; }, get fl() { return fl; }, get caught() { return caught; }, get D() { return D; }, posDe: function (f) { return posDe(f); }, get panier() { return panierFl.length; }, get vase() { return vaseFl.length; }, get fem() { return [femX, femY]; }, presentation: function (n) { presentation(n); }, demarrer: function () { demarrer(); } };
   phoneEl.addEventListener("pointerdown", toucher); phoneEl.addEventListener("pointermove", toucher); window.addEventListener("pointerup", function () { appui = false; });
   document.addEventListener("visibilitychange", function () { if (document.hidden && enJeu && !pause && !fini) menu(); });
 
+  // ---------- 12 nov. : la télé et les téléphones manettes : seul (le jeu de toujours) ou à 2 ou 3 joueurs (la partie à plusieurs) ----------
+  var PQS = new URLSearchParams(location.search), TV = { on: false, code: "", canal: null, J: [null, null, null], cur: [], solo: -1, fete: null, env: 0 };
+  var COULJ = ["#ffd23c", "#ff7ac8", "#5ec8ff"], NOMP = { fr: ["Gauche", "Milieu", "Droite"], en: ["Left", "Middle", "Right"] };
+  var FLJ = ["rouge", "jaune", "bleu"], FLJN = { fr: ["rouges", "jaunes", "bleues"], en: ["red", "yellow", "blue"] };   // chaque joueur a sa couleur de fleurs
+  var ENVS = ["img/deco0.webp"].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (i) { return "img/th" + pad(i) + ".webp"; }));   // les environnements, au choix pour la partie à plusieurs
+  function tvEnv(ev, d) { if (TV.canal) TV.canal.send({ type: "broadcast", event: ev, payload: d || {} }); }
+  function ecranTele() {
+    var fr = lang === "fr", url = location.origin + "/?tv=1";
+    afficher('<h2>' + (fr ? "Jouer sur la télé" : "Play on the TV") + '</h2><p>' + (fr ? "Sur la télé (ou l'ordinateur branché à la télé), ouvre :" : "On the TV (or the computer plugged into it), open:") + '</p><p><b>' + url.replace(/^https?:\/\//, "") + '</b></p><p>' + (fr ? "Chaque joueur scanne le code de sa place avec son téléphone : seul, ou à 2 ou 3." : "Each player scans the code of their place with their phone: alone, or 2 or 3 players.") + '</p>' +
+      '<button class="gros-bouton" id="tvIci" type="button">' + (fr ? "Cet écran est la télé" : "This screen is the TV") + '</button><button class="slien" id="ret" type="button">' + t("back") + '</button>');
+    boutonRetour();
+    var bt = document.getElementById("tvIci"); bt.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); bt.onclick = function (e) { e.stopPropagation(); location.href = "/?tv=1"; };
+  }
+  function qrDans(el, url) { var go = function () { try { var q = window.qrcode(0, "M"); q.addData(url); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } catch (e) {} };
+    if (window.qrcode) go(); else { var w = qrDans.att = qrDans.att || []; w.push(go); if (w.length === 1) { var sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"; sc.onload = function () { w.forEach(function (f) { f(); }); }; document.head.appendChild(sc); } } }
+  function tvLobby() {   // les trois places, chacune avec son code ; et le choix de l'environnement pour la partie à plusieurs
+    var fr = lang === "fr", L = document.getElementById("tvLobby");
+    if (!L) { L = document.createElement("div"); L.id = "tvLobby"; document.body.appendChild(L);
+      L.innerHTML = '<button type="button" class="tvX" id="tvX" aria-label="Fermer">×</button><div class="tvPl">' + [0, 1, 2].map(function (k) { return '<div class="tvP" id="tvP' + k + '" style="border-color:' + COULJ[k] + '"><b>' + NOMP[fr ? "fr" : "en"][k] + '</b><div class="tvQ" id="tvQ' + k + '"></div><span id="tvN' + k + '"></span></div>'; }).join("") + '</div>' +
+        '<div class="tvEnvT">' + (fr ? "Environnement de la partie à plusieurs :" : "Scenery for the multiplayer game:") + '</div><div class="tvEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '" style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div><div class="tvT" id="tvT"></div>';
+      [0, 1, 2].forEach(function (k) { qrDans(document.getElementById("tvQ" + k), location.origin + "/?manette=" + TV.code + "&place=" + k); });
+      document.getElementById("tvX").onclick = function (e) { e.stopPropagation(); location.href = "/"; };
+      L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); TV.env = +b.dataset.e; tvLobby(); }; }); }
+    var n = TV.J.filter(Boolean).length;
+    L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.classList.toggle("ici", +b.dataset.e === TV.env); });
+    [0, 1, 2].forEach(function (k) { var j = TV.J[k]; document.getElementById("tvN" + k).textContent = j ? j.pseudo + " · " + (fr ? "fleurs " : "") + FLJN[fr ? "fr" : "en"][k] + (fr ? "" : " flowers") : (fr ? "libre" : "free"); document.getElementById("tvP" + k).classList.toggle("pris", !!j); });
+    document.getElementById("tvT").textContent = n === 0 ? (fr ? "Scanne le code de ta place avec ton téléphone" : "Scan your place's code with your phone") : n === 1 ? (fr ? "Seul : touche « Jouer » sur ton téléphone. À 2 ou 3 : les autres scannent leur code." : "Alone: tap “Play” on your phone. 2 or 3 players: the others scan their code.") : (fr ? "Partie à " + n + " : touchez « Jouer » sur un téléphone" : n + " players: tap “Play” on a phone");
+  }
+  function tvLobbyVu(v) { var L = document.getElementById("tvLobby"); if (L) L.hidden = !v; }
+  function tvCurseur(k) {
+    var c = document.getElementById("tvCur" + k); if (!c) { c = document.createElement("div"); c.id = "tvCur" + k; c.className = "tvCur"; c.style.borderColor = COULJ[k]; c.style.boxShadow = "0 0 0 3px rgba(0,0,0,.35), 0 0 18px " + COULJ[k]; document.body.appendChild(c); TV.cur[k] = { x: innerWidth * [.25, .5, .75][k], y: innerHeight * .55 }; }
+    var p = TV.cur[k]; c.style.transform = "translate(" + (p.x - 22) + "px," + (p.y - 22) + "px)"; return c;
+  }
+  function tvEtat() { var F = TV.fete; tvEnv("etat", { manche: F ? F.manche : 0, nb: F ? F.NB : 0, J: TV.J.map(function (j, k) { return j ? { pseudo: j.pseudo, perdu: !!j.perdu, score: j.score || 0, vict: F && F.vict ? F.vict[k] || 0 : 0 } : null; }), fete: !!TV.fete, solo: TV.solo, enJeu: enJeu, ecran: !voile.hidden }); }
+  function tvInit() {
+    TV.on = true; document.body.classList.add("modeTV");
+    var L = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; for (var i = 0; i < 4; i++) TV.code += L[Math.floor(Math.random() * L.length)];
+    tvLobby(); if (!sb) return;
+    TV.canal = sb.channel("flower-tv-" + TV.code, { config: { broadcast: { self: false } } });
+    TV.canal.on("broadcast", { event: "rejoindre" }, function (m) {
+      var p = m.payload || {}, k = p.place | 0; if (k < 0 || k > 2) return;
+      if (!TV.J[k] || TV.J[k].id !== p.id) { if (TV.fete) return; TV.J[k] = { id: p.id, pseudo: String(p.pseudo || (lang === "fr" ? "Joueur " : "Player ") + (k + 1)).slice(0, 16), niveau: p.niveau | 0, acces: !!p.acces, score: 0 }; }
+      TV.J[k].vu = Date.now(); tvLobby(); tvEtat();
+    });
+    TV.canal.on("broadcast", { event: "ping" }, function (m) { var k = (m.payload || {}).place | 0; if (TV.J[k]) TV.J[k].vu = Date.now(); });
+    TV.canal.on("broadcast", { event: "quitter" }, function (m) { var k = (m.payload || {}).place | 0; if (TV.fete && TV.J[k]) { TV.J[k].perdu = true; return; } TV.J[k] = null; if (TV.solo === k) TV.solo = -1; tvLobby(); tvEtat(); });
+    TV.canal.on("broadcast", { event: "curseur" }, function (m) {
+      var p = m.payload || {}, k = p.place | 0; if (!TV.J[k]) return; tvCurseur(k); var c = TV.cur[k];
+      c.x = Math.max(4, Math.min(innerWidth - 4, c.x + (p.dx || 0) * innerWidth)); c.y = Math.max(4, Math.min(innerHeight - 4, c.y + (p.dy || 0) * innerHeight));
+      var el = tvCurseur(k); el.classList.add("vu"); clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove("vu"); }, 6000);
+    });
+    TV.canal.on("broadcast", { event: "clic" }, function (m) {
+      var k = (m.payload || {}).place | 0; if (!TV.J[k]) return; tvCurseur(k); var c = TV.cur[k], el = tvCurseur(k); el.classList.add("vu", "clic"); setTimeout(function () { el.classList.remove("clic"); }, 250);
+      if (TV.fete) { feteClic(k, c.x, c.y); return; }
+      if (TV.solo === k && voile.hidden) { try { phoneEl.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: c.x, clientY: c.y, pointerType: "touch" })); window.dispatchEvent(new PointerEvent("pointerup", {})); } catch (e) {} return; }
+      if (TV.solo === k || TV.solo < 0) { var cible = document.elementFromPoint(c.x, c.y), b = cible && cible.closest("button, a"); if (b) b.click(); }   // un bouton de l'écran ou un environnement
+    });
+    TV.canal.on("broadcast", { event: "jouer" }, function (m) {
+      var k = (m.payload || {}).place | 0; if (!TV.J[k] || TV.fete) return; var n = TV.J.filter(Boolean).length;
+      if (n >= 2) { feteDemarrer(); return; }
+      if (TV.solo === k && !voile.hidden) { var b = voile.querySelector(".gros-bouton"); if (b) { b.click(); return; } }
+      TV.solo = k; var j = TV.J[k]; TV.acces = j.acces; if (j.niveau) { niveau = Math.max(1, Math.min(MAXN, j.niveau)); ecrire("niveau", niveau); }   // seul : le jeu de toujours, au niveau du téléphone
+      tvLobbyVu(false); presentation(niveau); tvEtat();
+    });
+    TV.canal.on("broadcast", { event: "accueil" }, function () { if (TV.fete) return; TV.solo = -1; enJeu = false; fini = true; fl = []; accueil(); tvLobbyVu(true); tvEtat(); });
+    TV.canal.subscribe(function (st) { if (st === "SUBSCRIBED") tvEnv("tv", {}); });
+    setInterval(function () { if (!TV.fete) { var ch = false; TV.J.forEach(function (j, k) { if (j && Date.now() - (j.vu || 0) > 12000) { TV.J[k] = null; ch = true; } }); if (ch) tvLobby(); } tvEtat(); }, 1500);
+  }
+  // la partie à plusieurs : chacun son jardinier qui lance, sa jardinière et son panier, sa couleur de fleurs ; une de ses fleurs tombe par terre, et il a perdu ; le dernier qui attrape encore gagne
+  var FETE_FOND = null, FLEUR_GAGNE = img("img/fl/rouge-01.webp");
+  function feteDemarrer() {
+    var pl = [0, 1, 2].filter(function (k) { return TV.J[k]; }), n = pl.length, cvF = document.getElementById("fete");
+    if (!cvF) { cvF = document.createElement("canvas"); cvF.id = "fete"; document.body.appendChild(cvF); }
+    FETE_FOND = img(ENVS[TV.env] || ENVS[0]);
+    cvF.hidden = false; tvLobbyVu(false); enJeu = false; voile.hidden = true;
+    var F = TV.fete = { cv: cvF, g: cvF.getContext("2d"), dern: performance.now(), manche: 0, NB: NB_MANCHES, vict: {}, cols: [] };
+    pl.forEach(function (k) { F.vict[k] = 0; });
+    feteManche(F, pl);
+    tvEtat(); requestAnimationFrame(feteBoucle);
+  }
+  var NB_MANCHES = 5;   // 12 nov. : une partie = 5 manches ; on peut perdre une manche et continuer ; à la fin, celui qui a gagné le plus de manches gagne
+  function feteManche(F, pl) {
+    pl = pl || F.cols.map(function (c) { return c.k; }); var n = pl.length; F.manche++; F.t0 = performance.now(); F.fini = 0; F.fl = []; F.go = 3; F.finPartie = false;
+    F.cible = 10 + 2 * (F.manche - 1);   // le nombre de fleurs à réunir pour gagner la manche : 10, puis 2 de plus à chaque manche
+    F.cols = pl.map(function (k, i) { var j = TV.J[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0); j.score = 0; j.faux = 0; } return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 3.6, tous: 1.6, lance: 0, panier: [], pb: null }; });
+  }
+  window.IFL_DBG.ffm = function (k) { feteFinManche(TV.fete, k, performance.now()); };
+  function feteFinManche(F, k, now) {
+    if (F.fini) return; F.fini = now; F.gagnant = k; F.temps = Math.max(0, (now - F.t0) / 1000 - 3); if (k >= 0) { F.vict[k]++; F.trophees = F.trophees || []; F.trophees.push({ k: k, n: F.vict[k], t0: now }); }   // une grosse fleur rouge vient se poser en haut de sa place
+    bip(523, .12, "triangle", .08); setTimeout(function () { bip(659, .12, "triangle", .08); }, 120); setTimeout(function () { bip(784, .2, "triangle", .08); }, 240);
+    if (F.manche >= F.NB) { var bv = -1, ex = []; F.cols.forEach(function (c) { var v = F.vict[c.k] || 0; if (v > bv) { bv = v; ex = [c.k]; } else if (v === bv) ex.push(c.k); });
+      if (ex.length === 1) { F.finPartie = true; F.champion = ex[0]; F.bataille = null; } else F.bataille = ex; }   // égalité : les ex-aequo font une bataille, jusqu'à ce qu'il y ait un seul gagnant
+    tvEtat();
+  }
+  function feteCol(c, W2) { var w = W2 / c.n; return { x: w * c.i + w / 2, w: w }; }
+  function feteDessine(g, im, x, y, w, h) { drawImg0.call(g, volume(im), x, y, w, h); }
+  function feteClic(k, x, y) {
+    var F = TV.fete; if (!F || F.go > 0 || F.fini) return; var best = null, bd = 1e9;
+    F.fl.forEach(function (f) { if (f.pris || f.tombe) return; var d = Math.hypot(f.x - x, f.y - y); if (d < f.h * .8 && d < bd) { bd = d; best = f; } });
+    if (!best) return;
+    var j = TV.J[k]; if (!j || j.perdu) return;
+    if (best.k !== k) { bip(1400, .07, "sine", .05); j.faux = (j.faux || 0) + 1; if (j.faux >= 3) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } return; }   // pas sa fleur : un petit « ping » ; à la 3e, il perd la manche
+    best.pris = true; best.pt = 0; best.px = best.x; best.py = best.y; j.score++; chime(j.score % 8 + 1);
+    if (j.score >= F.cible) feteFinManche(F, k, performance.now());   // le premier qui a réuni ses fleurs gagne la manche
+    var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.1, c.D - .08); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
+  }
+  function feteBoucle(now) {
+    var F = TV.fete; if (!F) return; requestAnimationFrame(feteBoucle);
+    var dt = Math.min(.05, (now - F.dern) / 1000), W2 = innerWidth, H2 = innerHeight, g = F.g, dp = Math.min(2, window.devicePixelRatio || 1); F.dern = now;
+    if (F.cv.width !== Math.round(W2 * dp)) { F.cv.width = Math.round(W2 * dp); F.cv.height = Math.round(H2 * dp); }
+    g.setTransform(dp, 0, 0, dp, 0, 0);
+    if (FETE_FOND && FETE_FOND.naturalWidth) { var k0 = Math.max(W2 / FETE_FOND.naturalWidth, H2 / FETE_FOND.naturalHeight); drawImg0.call(g, FETE_FOND, (W2 - FETE_FOND.naturalWidth * k0) / 2, (H2 - FETE_FOND.naturalHeight * k0) / 2, FETE_FOND.naturalWidth * k0, FETE_FOND.naturalHeight * k0); } else { g.fillStyle = "#cfe6b8"; g.fillRect(0, 0, W2, H2); }
+    var sol = H2 * .93, hautM = H2 * .2, fr = lang === "fr";
+    if (F.go > 0) F.go -= dt;
+    var vivants = F.cols.filter(function (c) { return TV.J[c.k] && !TV.J[c.k].perdu; });
+    if (!F.fini && F.go <= 0) {
+      F.cols.forEach(function (c) { var j = TV.J[c.k]; if (!j || j.perdu) return; c.prochain -= dt; if (c.prochain <= 0) { c.prochain = c.tous * (.8 + Math.random() * .4); c.lance = .35;   // le jardinier lance une fleur de sa couleur à sa jardinière
+        var col = feteCol(c, W2), im = img("img/fl/" + FLJ[c.k] + "-" + pad(1 + Math.floor(Math.random() * 10)) + ".webp"), h = Math.min(col.w * .22, H2 * .13);
+        F.fl.push({ k: c.k, im: im, x0: col.x, y0: hautM + H2 * .1, x1: col.x + (Math.random() - .5) * col.w * .55, t: 0, D: c.D, h: h, rot: (Math.random() - .5) * .6, x: col.x, y: hautM }); } });
+      F.fl.forEach(function (f) { if (f.pris || f.tombe) return; f.t += dt / f.D; var u = Math.min(1, f.t); f.x = f.x0 + (f.x1 - f.x0) * u + Math.sin(f.t * 5) * 6; f.y = f.y0 + (sol - f.y0) * Math.pow(u, 1.25);
+        if (u >= 1) { f.tombe = true; var j = TV.J[f.k]; if (j && !j.perdu) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } } });
+      if (vivants.length <= 1 && F.cols.length >= 2) feteFinManche(F, vivants.length ? vivants[0].k : -1, now);   // le dernier qui n'a rien fait tomber gagne la manche
+    }
+    // les jardiniers en haut, les jardinières en bas
+    F.cols.forEach(function (c) { var col = feteCol(c, W2), j = TV.J[c.k], perdu = j && j.perdu; c.lance = Math.max(0, c.lance - dt);
+      g.save(); if (perdu) g.globalAlpha = .45;
+      var MI = MANS[c.lance > 0 ? 2 : 3]; if (MI && MI.naturalWidth) { var mh = H2 * .2, mw = mh * MI.naturalWidth / MI.naturalHeight; feteDessine(g, MI, col.x - mw / 2, hautM - mh * .55, mw, mh); }
+      var FI = FEMP[perdu ? 9 : 4]; if (FI && FI.naturalWidth) { var fh = H2 * .27, fw = fh * FI.naturalWidth / FI.naturalHeight; feteDessine(g, FI, col.x - fw / 2, sol - fh, fw, fh); } c.pb = { x: col.x, y: sol - H2 * .27 * .45 };
+      c.panier.slice(-10).forEach(function (im, q, a) { if (!im.naturalWidth) return; var h2 = H2 * .045, w2 = h2 * im.naturalWidth / im.naturalHeight, an = a.length > 1 ? -.6 + 1.2 * q / (a.length - 1) : 0; g.save(); g.translate(c.pb.x + Math.sin(an) * H2 * .025, c.pb.y - H2 * .01); g.rotate(an * .6); feteDessine(g, im, -w2 / 2, -h2, w2, h2); g.restore(); });
+      g.restore();
+      g.save(); g.font = "800 " + Math.round(H2 * .03) + "px Nunito, system-ui, sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = COULJ[c.k];
+      var lab = (j ? j.pseudo : "") + " · " + (j ? j.score : 0) + "/" + F.cible; g.strokeText(lab, col.x, H2 * .045); g.fillText(lab, col.x, H2 * .045);
+      if (perdu) { g.font = "900 " + Math.round(H2 * .06) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(fr ? "Perdu" : "Out", col.x, H2 * .5); g.fillText(fr ? "Perdu" : "Out", col.x, H2 * .5); }
+      g.restore(); });
+    // les manches gagnées : une grosse fleur rouge par manche, en haut de la place du gagnant
+    (F.trophees || []).forEach(function (tr) { var c = F.cols.filter(function (q) { return q.k === tr.k; })[0]; if (!c) return; var col = feteCol(c, W2), im = FLEUR_GAGNE; if (!im.naturalWidth) return;
+      var hh = H2 * .085, ww = hh * im.naturalWidth / im.naturalHeight, tx = col.x + (tr.n - 1 - (F.NB - 1) / 2) * ww * .95 + col.w * .28, ty = H2 * .07, u = Math.min(1, (now - tr.t0) / 900), e = 1 - Math.pow(1 - u, 3), x = W2 / 2 + (tx - W2 / 2) * e, y = H2 * .45 + (ty - H2 * .45) * e - Math.sin(e * 3.14) * H2 * .1, sc = 1 + (1 - e) * 1.2;
+      g.save(); g.shadowColor = "#ff2a2a"; g.shadowBlur = 16; g.translate(x, y); g.scale(sc, sc); feteDessine(g, im, -ww / 2, -hh / 2, ww, hh); g.restore(); });
+    // les fleurs
+    F.fl = F.fl.filter(function (f) { return !(f.pris && f.pt >= 1) && !(f.tombe && (f.tt || 0) > 1.2); });
+    F.fl.forEach(function (f) { if (f.tombe) f.tt = (f.tt || 0) + dt; if (!f.im.naturalWidth) return; var w = f.h * f.im.naturalWidth / f.im.naturalHeight, x = f.x, y = f.y, s = 1, a = 1;
+      if (f.pris) { f.pt += dt / .55; var c = F.cols.filter(function (q) { return q.k === f.k; })[0], e = 1 - Math.pow(1 - Math.min(1, f.pt), 2); x = f.px + (c.pb.x - f.px) * e; y = f.py + (c.pb.y - f.py) * e - Math.sin(e * 3.14) * H2 * .05; s = 1 - .6 * e; if (f.pt >= 1) c.panier.push(f.im); }
+      if (f.tombe) a = Math.max(0, 1 - f.tt / 1.2);
+      g.save(); g.globalAlpha = a; g.translate(x, y); g.rotate(f.rot * (f.tombe ? 2 : 1)); g.scale(s, s); feteDessine(g, f.im, -w / 2, -f.h / 2, w, f.h); g.restore(); });
+    // le chronomètre, le départ, la fin
+    g.save(); g.textAlign = "center"; g.lineWidth = 6; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = "#fff"; g.font = "900 " + Math.round(H2 * .04) + "px Nunito, system-ui, sans-serif";
+    var tps = F.fini ? F.temps : Math.max(0, (now - F.t0) / 1000 - 3), mm = Math.floor(tps / 60), ss = Math.floor(tps % 60), cr = mm + ":" + (ss < 10 ? "0" : "") + ss;
+    g.strokeText(cr, W2 / 2, H2 * .1); g.fillText(cr, W2 / 2, H2 * .1);
+    g.font = "800 " + Math.round(H2 * .028) + "px Nunito, system-ui, sans-serif"; var mt = F.manche > F.NB ? (fr ? "Bataille !" : "Tie-break!") : (fr ? "Manche " : "Round ") + F.manche + " / " + F.NB; g.strokeText(mt, W2 / 2, H2 * .145); g.fillText(mt, W2 / 2, H2 * .145); g.font = "900 " + Math.round(H2 * .04) + "px Nunito, system-ui, sans-serif";
+    if (F.go > 0) { g.font = "900 " + Math.round(H2 * .2) + "px Nunito, system-ui, sans-serif"; var gv = String(Math.ceil(F.go)); g.strokeText(gv, W2 / 2, H2 * .55); g.fillText(gv, W2 / 2, H2 * .55); }
+    if (F.fini) { var gj = TV.J[F.gagnant], txt = (F.manche > F.NB ? (fr ? "Bataille" : "Tie-break") : (fr ? "Manche " : "Round ") + F.manche) + " : " + (gj ? gj.pseudo + (fr ? " gagne · " : " wins · ") + cr : (fr ? "personne" : "nobody"));
+      g.font = "900 " + Math.round(H2 * .055) + "px Nunito, system-ui, sans-serif"; g.fillStyle = gj ? COULJ[F.gagnant] : "#fff"; g.strokeText(txt, W2 / 2, H2 * .38); g.fillText(txt, W2 / 2, H2 * .38);
+      if (F.bataille && !F.finPartie) { var tb = (fr ? "Égalité ! Bataille : " : "Tie! Tie-break: ") + F.bataille.map(function (q) { return TV.J[q] ? TV.J[q].pseudo : ""; }).join(fr ? " contre " : " vs ");
+        g.font = "900 " + Math.round(H2 * .06) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(tb, W2 / 2, H2 * .5); g.fillText(tb, W2 / 2, H2 * .5); }
+      if (F.finPartie) { var cj = TV.J[F.champion], t2 = cj ? cj.pseudo + (fr ? " gagne la partie ! (" : " wins the game! (") + F.vict[F.champion] + (fr ? " manches)" : " rounds)") : (fr ? "Égalité !" : "It's a tie!");
+        g.font = "900 " + Math.round(H2 * .075) + "px Nunito, system-ui, sans-serif"; g.fillStyle = cj ? COULJ[F.champion] : "#fff"; g.strokeText(t2, W2 / 2, H2 * .5); g.fillText(t2, W2 / 2, H2 * .5); }
+      else if (now - F.fini > 3500) { feteManche(F); tvEtat(); }   // manche suivante
+      if (F.finPartie && now - F.fini > 8000) { F.cv.hidden = true; TV.fete = null; TV.J.forEach(function (j) { if (j) j.perdu = false; }); tvLobby(); tvLobbyVu(true); accueil(); tvEtat(); } }
+    g.restore();
+  }
+  // le téléphone : la manette de sa place
+  function manetteInit() {
+    var code = String(PQS.get("manette") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6), place = Math.max(0, Math.min(2, PQS.get("place") | 0)), fr = lang === "fr", id = Math.random().toString(36).slice(2);
+    var m = document.createElement("div"); m.id = "manette";
+    m.innerHTML = '<div class="mHaut"><b>Island Flower</b><span style="color:' + COULJ[place] + '">' + NOMP[fr ? "fr" : "en"][place] + ' · ' + (fr ? "Télé " : "TV ") + code + '</span></div>' +
+      '<div class="mInfo" id="mInfo">' + (fr ? "Connexion à la télé…" : "Connecting to the TV…") + '</div><div class="mCoul">' + (fr ? "À plusieurs, tes fleurs sont les " + FLJN.fr[place] : "With friends, your flowers are the " + FLJN.en[place] + " ones") + '</div>' +
+      '<div class="mPad" id="mPad" style="border-color:' + COULJ[place] + '"><span>' + (fr ? "Glisse ton doigt pour viser sur la télé, touche pour prendre la fleur" : "Slide to aim on the TV, tap to grab the flower") + '</span></div>' +
+      '<button class="mOk" id="mJouer" type="button">' + (fr ? "Jouer" : "Play") + '</button>' +
+      '<div class="mBas"><button id="mAcc" type="button">' + (fr ? "Accueil de la télé" : "TV home") + '</button><button id="mQuit" type="button">' + (fr ? "Quitter la manette" : "Leave controller") + '</button></div>';
+    document.body.appendChild(m); document.body.classList.add("modeMan");
+    if (!sb || !code) { document.getElementById("mInfo").textContent = fr ? "Code de télé manquant." : "TV code missing."; return; }
+    var canal = sb.channel("flower-tv-" + code, { config: { broadcast: { self: false } } }), vu = 0;
+    var env = function (ev, d) { d = d || {}; d.place = place; d.id = id; canal.send({ type: "broadcast", event: ev, payload: d }); };
+    var parti = false, rejoindre = function () { if (!parti) env("rejoindre", { pseudo: pseudo, niveau: niveau, acces: niveauOuvert(niveau) }); };
+    canal.on("broadcast", { event: "tv" }, rejoindre);
+    canal.on("broadcast", { event: "etat" }, function (x) { var e = x.payload || {}, j = (e.J || [])[place]; vu = Date.now(); if (!j) { rejoindre(); return; }
+      var n = (e.J || []).filter(Boolean).length;
+      document.getElementById("mInfo").innerHTML = e.fete ? (fr ? "Manche " : "Round ") + e.manche + "/" + e.nb + " · ★ " + j.vict + "<br>" + (j.perdu ? (fr ? "Perdu · " : "Out · ") : "") + j.score + (fr ? " fleurs" : " flowers") : e.solo === place ? (fr ? "Tu joues seul" : "You play alone") : (n >= 2 ? (fr ? "Partie à " + n + " joueurs" : n + " players") : (fr ? "Prêt" : "Ready"));
+      document.getElementById("mJouer").hidden = !!e.fete || (e.solo === place && !e.ecran); });
+    canal.subscribe(function (st) { if (st === "SUBSCRIBED") rejoindre(); });
+    setInterval(function () { if (!vu || Date.now() - vu > 4000) rejoindre(); else env("ping"); }, 3000);
+    var pad0 = document.getElementById("mPad"), d = null, acc = { x: 0, y: 0 }, envoi = 0;
+    pad0.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); try { pad0.setPointerCapture(e.pointerId); } catch (er) {} d = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: Date.now() }; });
+    pad0.addEventListener("pointermove", function (e) { if (!d) return; acc.x += (e.clientX - d.x) / pad0.clientWidth * 1.5; acc.y += (e.clientY - d.y) / pad0.clientHeight * 1.5; d.x = e.clientX; d.y = e.clientY; var t2 = Date.now(); if (t2 - envoi > 30) { envoi = t2; env("curseur", { dx: acc.x, dy: acc.y }); acc.x = 0; acc.y = 0; } });
+    pad0.addEventListener("pointerup", function (e) { if (!d) return; if (acc.x || acc.y) { env("curseur", { dx: acc.x, dy: acc.y }); acc.x = 0; acc.y = 0; } if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 12 && Date.now() - d.t < 350) { env("clic"); try { navigator.vibrate && navigator.vibrate(25); } catch (er) {} } d = null; });
+    pad0.addEventListener("pointercancel", function () { d = null; });
+    var appui = function (bid, f) { var b = document.getElementById(bid); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); f(); }; };
+    appui("mJouer", function () { env("jouer"); }); appui("mAcc", function () { env("accueil"); });
+    appui("mQuit", function () { parti = true; env("quitter"); setTimeout(function () { try { sb.removeChannel(canal); } catch (er) {} location.href = "/"; }, 400); });   // on laisse le temps au message de partir
+  }
+  // fin d'une partie seule sur la télé : on revient aux places
+  var accueil0 = accueil; accueil = function () { accueil0.apply(this, arguments); if (TV.on && !TV.fete) { TV.solo = -1; tvLobbyVu(true); } };
   renderTexts(); accueil();
+  if (PQS.get("manette")) manetteInit();
+  if (PQS.get("tv")) tvInit();
 })();
 
 </script>
