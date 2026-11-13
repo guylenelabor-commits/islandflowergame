@@ -1330,12 +1330,16 @@
   }
   // ---------- 8 nov. : niveaux payants : 1 à 100 gratuits, puis chaque tranche de 100 niveaux = 2,99 $ (Stripe Olokun Aset) ----------
   var PAY_URL = "https://buy.stripe.com/8x28wP6KW6Td4YZ1hQgjC0t", packs = [];
+  var PASS_URL = "https://buy.stripe.com/aFafZh0mydhB1MNbWugjC0K", passJusqua = null;   // 12 nov. : pass 1 an à 9,99 $ : tous les niveaux pendant 365 jours
+  function passOk() { return !!session && !!passJusqua && new Date(passJusqua) > new Date(); }
   try { if (/[?&]paye=1/.test(location.search)) history.replaceState(null, "", location.pathname); } catch (e) {}
   function packDe(n) { return Math.ceil(n / 100); }
-  function niveauOuvert0(n) { var k = packDe(n); return k <= 1 || estAdmin || (!!session && packs.indexOf(k) >= 0); }
+  function niveauOuvert0(n) { var k = packDe(n); return k <= 1 || estAdmin || passOk() || (!!session && packs.indexOf(k) >= 0); }
   function majPacks(cb) {
-    if (!sb || !session) { packs = []; cb && cb(); return; }
-    sb.rpc("get_my_flower_packs").then(function (r) { if (!r.error && Array.isArray(r.data)) packs = r.data; cb && cb(); }, function () { cb && cb(); });
+    if (!sb || !session) { packs = []; passJusqua = null; cb && cb(); return; }
+    var nb = 0, fin = function () { if (++nb === 2) cb && cb(); };
+    sb.rpc("get_my_flower_packs").then(function (r) { if (!r.error && Array.isArray(r.data)) packs = r.data; fin(); }, fin);
+    sb.rpc("get_my_pass", { p_jeu: "flower" }).then(function (r) { if (!r.error) passJusqua = r.data || null; fin(); }, fin);
   }
   function verifAchats(suite) {   // compte connecté : on lit d'abord ses achats et son statut, une seule fois par compte
     if (!sb || !session || verifAchats.passe) return false;   // à chaque fois, on relit ses achats et son statut avant d'afficher le paiement (le compte de la propriétaire ne paie jamais)
@@ -1346,11 +1350,15 @@
   function ecranDebloquer(n) {
     var k = packDe(n), de = (k - 1) * 100 + 1, a = k * 100;
     afficher('<h2>🔒 ' + echap(t("lockTitle", { a: de, b: a })) + '</h2><p>' + echap(t("lockTxt", { a: de, b: a })) + '</p>' +
-      (session ? '<button class="gros-bouton" id="payer" type="button">' + echap(t("unlockBtn")) + '</button><button class="second" id="dejapaye" type="button">' + echap(t("alreadyPaid")) + '</button>'
+      (session ? '<button class="gros-bouton" id="payer" type="button">' + echap(t("unlockBtn")) + '</button>' +
+                 '<button class="second" id="pass1an" type="button" style="line-height:1.25">' + (lang === "fr" ? "Pass 1 an · 9,99 $<br><small>tous les niveaux pendant 1 an</small>" : "1-year pass · $9.99<br><small>all levels for 1 year</small>") + '</button>' +
+                 '<button class="second" id="dejapaye" type="button">' + echap(t("alreadyPaid")) + '</button>'
                : '<p class="petit">' + echap(t("lockLogin")) + '</p><button class="gros-bouton" id="cnx" type="button">' + t("login") + '</button>') +
       '<button class="slien" id="ret" type="button">' + t("home") + '</button>');
     boutonRetour();
-    ["payer", "dejapaye", "cnx"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
+    var ps = document.getElementById("pass1an");
+    if (ps) ps.onclick = function (e) { e.stopPropagation(); bip(660, .08); location.href = PASS_URL + "?client_reference_id=" + encodeURIComponent(session.user.id) + (session.user.email ? "&prefilled_email=" + encodeURIComponent(session.user.email) : ""); };
+    ["payer", "pass1an", "dejapaye", "cnx"].forEach(function (id) { var b = document.getElementById(id); if (b) b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
     var p = document.getElementById("payer");
     if (p) p.onclick = function (e) { e.stopPropagation(); bip(660, .08); location.href = PAY_URL + "?client_reference_id=" + encodeURIComponent(session.user.id + "_p" + k) + (session.user.email ? "&prefilled_email=" + encodeURIComponent(session.user.email) : ""); };
     var d = document.getElementById("dejapaye");
