@@ -207,7 +207,8 @@
   body.large #jeu { top: 0; height: 100%; border-radius: 0; }
   body.large #decoFlou { display: block; position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(14px) brightness(.92) saturate(1.1); }
   #decoG, #decoD { display: none; }
-  #accMan, #accFem { display: none; }
+  #accMan, #accFem, #accFl { display: none; }
+  body.large.accL #accFl { display: block; position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
   body.large.accL #phone { background: radial-gradient(ellipse at 50% 40%, #fff0f6 0%, #ffd6e8 55%, #ffb8d6 100%) !important; }   /* 12 nov. : ordinateur, écran d'accueil ouvert en grand, rose partout */
   body.large.accL #decoFlou, body.large.accL #decoG, body.large.accL #decoD, body.large.accL #decoNet { display: none; }
   body.large.accL .voile.acc { background: none !important; } body.large.accL .voile.acc::before, body.large.accL .voile.acc::after { display: none; }
@@ -274,7 +275,7 @@
 <body>
 <div id="fond"></div>
 <div id="phone">
-<div id="decoFlou"></div><div class="decoM" id="decoG"></div><div class="decoM" id="decoD"></div><div id="decoNet"></div><img id="accMan" src="img/man4.webp" alt=""><img id="accFem" src="img/fem8.webp" alt="">
+<div id="decoFlou"></div><div class="decoM" id="decoG"></div><div class="decoM" id="decoD"></div><div id="decoNet"></div><canvas id="accFl"></canvas><img id="accMan" src="img/man4.webp" alt=""><img id="accFem" src="img/fem8.webp" alt="">
 <canvas id="cv"></canvas>
 <div id="jeu" role="application" aria-label="Island Flower Game">
   <div class="hud" id="hud" hidden>
@@ -446,7 +447,7 @@
       JW = jw; phoneEl.style.setProperty("--jw", jw + "px"); [decoG, decoD].forEach(function (d) { d.style.backgroundRepeat = "repeat-x"; d.style.backgroundSize = Math.round(jw * 1.05) + "px auto"; d.style.backgroundPosition = d === decoG ? "left center" : "right center"; });
     } else { jeuEl.style.left = ""; jeuEl.style.width = ""; decoNet.style.left = ""; decoNet.style.width = ""; }
     phoneEl.style.width = w + "px"; phoneEl.style.height = h + "px";
-    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = haut + "px";
+    phoneEl.style.left = Math.round((VW - w) / 2) + "px"; phoneEl.style.top = haut + "px"; setTimeout(function () { if (typeof accFleurs === "function") accFleurs(); }, 30);
     fondEl.style.bottom = (-40 - Math.max(0, VH - window.innerHeight)) + "px";   // le fond flou descend lui aussi jusqu'en bas
     taille();
   }
@@ -731,8 +732,24 @@
   var MAN_DY = 105, persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), FEMS = [1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return img("img/fem" + i + ".webp"); }), femV = 0, MANS = [1, 2, 3, 4, 5, 6].map(function (i) { return img("img/man" + i + ".webp"); }), manX = .54, manBut = .54, manV = 0, manDir = 1, kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
   // 9 décors : un nouveau tous les 30 niveaux (1–30 : le marché d'origine), puis on recommence
   function theme() { var k = D ? Math.floor((D.n - 1) / 30) % 10 : 0; return k ? "img/th" + pad(k) + ".webp" : ""; }
+  // 12 nov. : ordinateur, écran d'accueil : quelques fleurs bombées autour du jardinier et de la jardinière
+  var ACC_FL = [["rose", 2], ["jaune", 5], ["rouge", 1], ["lilas", 3], ["orange", 7], ["bleu", 4], ["corail", 6], ["blanc", 2], ["violet", 8], ["peche", 3], ["turquoise", 5], ["lavande", 9], ["rouge", 6], ["jaune", 9], ["rose", 7], ["ambre", 4]].map(function (q) { return img("img/fl/" + q[0] + "-" + pad(q[1]) + ".webp"); }), accFlT = 0;
+  function accFleurs(essai) {
+    var c = document.getElementById("accFl"); if (!c || !LARGE || !document.body.classList.contains("accL")) return;
+    var r = phoneEl.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1); c.width = Math.round(r.width * d); c.height = Math.round(r.height * d);
+    var g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, r.width, r.height);
+    var pret = true, H0 = r.height, k = 0;
+    var jw = JW || r.height * .5, cote = (r.width - jw) / 2;
+    [0, 1].forEach(function (s) { var x0 = s ? r.width - cote : 0;   // la bande de gauche (jardinier) puis celle de droite (jardinière)
+      var P = [[.1, .2], [.9, .16], [.5, .07], [.07, .6], [.93, .62], [.1, .9], [.9, .9], [.3, .1]];
+      P.forEach(function (q, i) { var f = ACC_FL[(k++) % ACC_FL.length]; if (!f.naturalWidth) { pret = false; return; } var v = volume(f); if (v === f) pret = false;
+        var fh = H0 * (.1 + ((i * 37 + s * 11) % 5) * .012), fw = fh * f.naturalWidth / f.naturalHeight, qx = s ? 1 - q[0] : q[0];
+        var x = Math.max(x0 + fw * .6, Math.min(x0 + cote - fw * .6, x0 + qx * cote)), y = Math.max(fh * .6, Math.min(H0 - fh * .6, q[1] * H0)), rot = (((i * 53 + s * 29) % 9) - 4) * .07;
+        g.save(); g.translate(x, y); g.rotate(rot); g.shadowColor = "rgba(150,40,90,.3)"; g.shadowBlur = 10; g.shadowOffsetY = 6; drawImg0.call(g, v, -fw / 2, -fh / 2, fw, fh); g.restore(); }); });
+    if (!pret && (essai || 0) < 20) { clearTimeout(accFlT); accFlT = setTimeout(function () { accFleurs((essai || 0) + 1); }, 250); }
+  }
   function fondJeu(on) {
-    var th = on ? theme() : ""; document.body.classList.toggle("accL", !on);
+    var th = on ? theme() : ""; document.body.classList.toggle("accL", !on); if (!on) setTimeout(accFleurs, 30);
     phoneEl.style.backgroundImage = 'url("' + (on ? "img/bg_jeu.webp" : "img/bg.webp") + '")';
     fondEl.style.backgroundImage = 'url("' + (th || (on ? "img/fond_jeu.webp" : "img/fond.webp")) + '")';
     jeuEl.style.background = "";
