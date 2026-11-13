@@ -1483,9 +1483,10 @@
     }
     // les jardiniers en haut, les jardinières en bas
     F.cols.forEach(function (c) { var col = feteCol(c, W2), j = TV.J[c.k], perdu = j && j.perdu; c.lance = Math.max(0, c.lance - dt);
-      g.save(); if (perdu) g.globalAlpha = .45;
-      var MI = MANS[c.lance > 0 ? 2 : 3]; if (MI && MI.naturalWidth) { var mh = H2 * .2, mw = mh * MI.naturalWidth / MI.naturalHeight; feteDessine(g, MI, col.x - mw / 2, hautM - mh * .55, mw, mh); }
-      var FI = FEMP[perdu ? 9 : 4]; if (FI && FI.naturalWidth) { var fh = H2 * .27, fw = fh * FI.naturalWidth / FI.naturalHeight; feteDessine(g, FI, col.x - fw / 2, sol - fh, fw, fh); } c.pb = { x: col.x, y: sol - H2 * .27 * .45 };
+      var finP = F.finPartie && F.fini, danse = finP && c.k === F.champion, fd = Math.floor((now - F.fini) / 1000 * 2.5);   // fin de partie : le gagnant danse avec sa jardinière, les autres restent immobiles, un peu tristes
+      g.save(); if (finP && !danse) { g.globalAlpha = .6; g.filter = "grayscale(.75) brightness(.85)"; } else if (perdu && !finP) g.globalAlpha = .45;
+      var MI = danse ? MAND[fd % MAND.length] : finP ? MANS[3] : MANS[c.lance > 0 ? 2 : 3]; if (danse && !(MI && MI.naturalWidth)) MI = MANS[3]; if (MI && MI.naturalWidth) { var mh = H2 * .2, mw = mh * MI.naturalWidth / MI.naturalHeight; feteDessine(g, MI, col.x - mw / 2, hautM - mh * .55, mw, mh); }
+      var FI = danse ? FEMD[fd % FEMD.length] : finP ? FEMP[4] : FEMP[perdu ? 9 : 4]; if (danse && !(FI && FI.naturalWidth)) FI = FEMP[4]; if (FI && FI.naturalWidth) { var fh = H2 * .27, fw = fh * FI.naturalWidth / FI.naturalHeight; feteDessine(g, FI, col.x - fw / 2, sol - fh, fw, fh); } c.pb = { x: col.x, y: sol - H2 * .27 * .45 };
       c.panier.slice(-10).forEach(function (im, q, a) { if (!im.naturalWidth) return; var h2 = H2 * .045, w2 = h2 * im.naturalWidth / im.naturalHeight, an = a.length > 1 ? -.6 + 1.2 * q / (a.length - 1) : 0; g.save(); g.translate(c.pb.x + Math.sin(an) * H2 * .025, c.pb.y - H2 * .01); g.rotate(an * .6); feteDessine(g, im, -w2 / 2, -h2, w2, h2); g.restore(); });
       g.restore();
       g.save(); g.font = "800 " + Math.round(H2 * .03) + "px Nunito, system-ui, sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = COULJ[c.k];
