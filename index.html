@@ -1301,9 +1301,9 @@
     sb.rpc("get_my_flower_packs").then(function (r) { if (!r.error && Array.isArray(r.data)) packs = r.data; cb && cb(); }, function () { cb && cb(); });
   }
   function verifAchats(suite) {   // compte connecté : on lit d'abord ses achats et son statut, une seule fois par compte
-    if (!sb || !session || verifAchats.fait === session.user.id) return false;
-    verifAchats.fait = session.user.id; afficher('<h2>…</h2>');
-    var nb = 0, fin = function () { if (++nb === 2) suite(); };
+    if (!sb || !session || verifAchats.passe) return false;   // à chaque fois, on relit ses achats et son statut avant d'afficher le paiement (le compte de la propriétaire ne paie jamais)
+    afficher('<h2>…</h2>');
+    var nb = 0, fin = function () { if (++nb === 2) { verifAchats.passe = true; try { suite(); } finally { verifAchats.passe = false; } } };
     majPacks(fin); chargerAdmin(fin); return true;
   }
   function ecranDebloquer(n) {
