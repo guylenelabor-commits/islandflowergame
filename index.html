@@ -25,7 +25,7 @@
   #tvLobby .tvEnvs button { width: 54px; height: 38px; border-radius: 8px; border: 3px solid transparent; background-size: cover; background-position: center; cursor: pointer; padding: 0; }
   #tvLobby .tvEnvs button.ici { border-color: #2faa3a; box-shadow: 0 0 0 2px #fff, 0 0 10px #2faa3a; }
   #tvLobby .tvT { margin-top: 8px; }
-  .tvCur { position: fixed; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%; border: 4px solid; z-index: 9800; pointer-events: none; opacity: 0; transition: opacity .3s; }
+  .tvCur { position: fixed; left: 0; top: 0; width: 9vh; height: 9vh; border-radius: 50%; border: 4px solid; z-index: 9800; pointer-events: none; opacity: 0; transition: opacity .3s; }
   .tvCur.vu { opacity: 1; } .tvCur.clic { background: rgba(255,255,255,.45); }
   #fete { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 8000; }
   #fete[hidden] { display: none; }
@@ -853,7 +853,7 @@
       for (var i = fl.length - 1; i >= 0; i--) {
         var f = fl[i];
         // 12 nov. : les fleurs se prennent seulement avec le doigt
-        if (f.st === 0) { f.t += dt / f.D; f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
+        if (f.st === 0) { f.t += dt / (f.D * (typeof TV !== "undefined" && TV && TV.on ? 1.35 : 1)); f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
         else { f.ct += dt / (f.auPanier ? .7 : f.ok ? 1.1 : .6); if (f.ct >= 1) { fl.splice(i, 1); if (f.auPanier) panierFl.push(f.im); } }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
@@ -966,6 +966,12 @@
     }
   }
 
+  function attraperSous(cx, cy, marge) {   // télé : dès que le curseur touche une bonne fleur, on l'a (sans taper)
+    if (!enJeu || pause || fini) return; var r = cv.getBoundingClientRect(), X = (cx - r.left) / r.width * W, Y = (cy - r.top) / r.height * H, m = marge / r.height * H;
+    for (var i = fl.length - 1; i >= 0; i--) { var f = fl[i]; if (f.st !== 0 || !f.im.naturalWidth || f.spike || !(f.tm || f.cr || matche(f.k, D.kinds))) continue;
+      var q = posDe(f), h = f.sz * PW * 1.15, w = h * f.im.naturalWidth / f.im.naturalHeight;
+      if (Math.abs(X - q.x) <= Math.max(w, h * .6) * .7 + m && Math.abs(Y - q.y) <= h * .7 + m) { attraper(f, q); return; } }
+  }
   function attraper(f, p) {
     f.st = 1; f.ct = 0; f.cx = p.x; f.cy = p.y;
     if (f.tm) { f.ok = true; kickF = 1; tLeft = Math.min(D.time, tLeft + D.time * .2); chime(4); bulle("+⏱", "oui", p.x, p.y); return; }
@@ -1389,10 +1395,15 @@
   function tvLobbyVu(v) { var L = document.getElementById("tvLobby"); if (L) L.hidden = !v; }
   function tvCurseur(k) {
     var c = document.getElementById("tvCur" + k); if (!c) { c = document.createElement("div"); c.id = "tvCur" + k; c.className = "tvCur"; c.style.borderColor = COULJ[k]; c.style.boxShadow = "0 0 0 3px rgba(0,0,0,.35), 0 0 18px " + COULJ[k]; document.body.appendChild(c); TV.cur[k] = { x: innerWidth * [.25, .5, .75][k], y: innerHeight * .55 }; }
-    var p = TV.cur[k]; c.style.transform = "translate(" + (p.x - 22) + "px," + (p.y - 22) + "px)"; return c;
+    var p = TV.cur[k]; var dm = innerHeight * .045; c.style.transform = "translate(" + (p.x - dm) + "px," + (p.y - dm) + "px)"; return c;
   }
   function tvEtat() { var F = TV.fete; tvEnv("etat", { manche: F ? F.manche : 0, nb: F ? F.NB : 0, J: TV.J.map(function (j, k) { return j ? { pseudo: j.pseudo, perdu: !!j.perdu, score: j.score || 0, vict: F && F.vict ? F.vict[k] || 0 : 0 } : null; }), fete: !!TV.fete, solo: TV.solo, enJeu: enJeu, ecran: !voile.hidden }); }
+  function tvSurvol() {
+    TV.cur.forEach(function (c, k) { if (!c || !TV.J[k] || !c.bouge) return;
+      if (TV.fete) feteSurvol(k, c.x, c.y); else if (TV.solo === k && voile.hidden) attraperSous(c.x, c.y, innerHeight * .045); });
+  }
   function tvInit() {
+    setInterval(tvSurvol, 50);
     TV.on = true; document.body.classList.add("modeTV");
     var L = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; for (var i = 0; i < 4; i++) TV.code += L[Math.floor(Math.random() * L.length)];
     tvLobby(); if (!sb) return;
@@ -1406,7 +1417,7 @@
     TV.canal.on("broadcast", { event: "quitter" }, function (m) { var k = (m.payload || {}).place | 0; if (TV.fete && TV.J[k]) { TV.J[k].perdu = true; return; } TV.J[k] = null; if (TV.solo === k) TV.solo = -1; tvLobby(); tvEtat(); });
     TV.canal.on("broadcast", { event: "curseur" }, function (m) {
       var p = m.payload || {}, k = p.place | 0; if (!TV.J[k]) return; tvCurseur(k); var c = TV.cur[k];
-      c.x = Math.max(4, Math.min(innerWidth - 4, c.x + (p.dx || 0) * innerWidth)); c.y = Math.max(4, Math.min(innerHeight - 4, c.y + (p.dy || 0) * innerHeight));
+      c.x = Math.max(4, Math.min(innerWidth - 4, c.x + (p.dx || 0) * innerWidth)); c.y = Math.max(4, Math.min(innerHeight - 4, c.y + (p.dy || 0) * innerHeight)); c.bouge = 1;
       var el = tvCurseur(k); el.classList.add("vu"); clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove("vu"); }, 6000);
     });
     TV.canal.on("broadcast", { event: "clic" }, function (m) {
@@ -1442,7 +1453,7 @@
   function feteManche(F, pl) {
     pl = pl || F.cols.map(function (c) { return c.k; }); var n = pl.length; F.manche++; F.t0 = performance.now(); F.fini = 0; F.fl = []; F.go = 3; F.finPartie = false;
     F.cible = 10 + 2 * (F.manche - 1);   // le nombre de fleurs à réunir pour gagner la manche : 10, puis 2 de plus à chaque manche
-    F.cols = pl.map(function (k, i) { var j = TV.J[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0); j.score = 0; j.faux = 0; } return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 3.6, tous: 1.6, lance: 0, panier: [], pb: null }; });
+    F.cols = pl.map(function (k, i) { var j = TV.J[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0); j.score = 0; j.faux = 0; } return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 5, tous: 1.6, lance: 0, panier: [], pb: null }; });
   }
   window.IFL_DBG.ffm = function (k) { feteFinManche(TV.fete, k, performance.now()); };
   function feteFinManche(F, k, now) {
@@ -1454,6 +1465,12 @@
   }
   function feteCol(c, W2) { var w = W2 / c.n; return { x: w * c.i + w / 2, w: w }; }
   function feteDessine(g, im, x, y, w, h) { drawImg0.call(g, volume(im), x, y, w, h); }
+  function feteSurvol(k, x, y) {   // télé à plusieurs : dès que le curseur touche une fleur, c'est comme si on la touchait
+    var F = TV.fete; if (!F || F.go > 0 || F.fini) return; var j = TV.J[k]; if (!j || j.perdu) return; var m = innerHeight * .045;
+    F.fl.forEach(function (f) { if (f.pris || f.tombe || F.fini) return; if (Math.hypot(f.x - x, f.y - y) >= f.h * .8 + m) return;
+      if (f.k === k) { feteClic(k, f.x, f.y); return; }
+      f.vuPar = f.vuPar || {}; if (f.vuPar[k]) return; f.vuPar[k] = 1; feteClic(k, f.x, f.y); });   // la fleur d'un autre : un « ping », une seule fois par fleur
+  }
   function feteClic(k, x, y) {
     var F = TV.fete; if (!F || F.go > 0 || F.fini) return; var best = null, bd = 1e9;
     F.fl.forEach(function (f) { if (f.pris || f.tombe) return; var d = Math.hypot(f.x - x, f.y - y); if (d < f.h * .8 && d < bd) { bd = d; best = f; } });
@@ -1462,7 +1479,7 @@
     if (best.k !== k) { bip(1400, .07, "sine", .05); j.faux = (j.faux || 0) + 1; if (j.faux >= 3) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } return; }   // pas sa fleur : un petit « ping » ; à la 3e, il perd la manche
     best.pris = true; best.pt = 0; best.px = best.x; best.py = best.y; j.score++; chime(j.score % 8 + 1);
     if (j.score >= F.cible) feteFinManche(F, k, performance.now());   // le premier qui a réuni ses fleurs gagne la manche
-    var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.1, c.D - .08); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
+    var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.6, c.D - .1); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
   }
   function feteBoucle(now) {
     var F = TV.fete; if (!F) return; requestAnimationFrame(feteBoucle);
@@ -1542,7 +1559,7 @@
     setInterval(function () { if (!vu || Date.now() - vu > 4000) rejoindre(); else env("ping"); }, 3000);
     var pad0 = document.getElementById("mPad"), d = null, acc = { x: 0, y: 0 }, envoi = 0;
     pad0.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); try { pad0.setPointerCapture(e.pointerId); } catch (er) {} d = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: Date.now() }; });
-    pad0.addEventListener("pointermove", function (e) { if (!d) return; acc.x += (e.clientX - d.x) / pad0.clientWidth * 1.5; acc.y += (e.clientY - d.y) / pad0.clientHeight * 1.5; d.x = e.clientX; d.y = e.clientY; var t2 = Date.now(); if (t2 - envoi > 30) { envoi = t2; env("curseur", { dx: acc.x, dy: acc.y }); acc.x = 0; acc.y = 0; } });
+    pad0.addEventListener("pointermove", function (e) { if (!d) return; acc.x += (e.clientX - d.x) / pad0.clientWidth * 2.6; acc.y += (e.clientY - d.y) / pad0.clientHeight * 2.6; d.x = e.clientX; d.y = e.clientY; var t2 = Date.now(); if (t2 - envoi > 30) { envoi = t2; env("curseur", { dx: acc.x, dy: acc.y }); acc.x = 0; acc.y = 0; } });
     pad0.addEventListener("pointerup", function (e) { if (!d) return; if (acc.x || acc.y) { env("curseur", { dx: acc.x, dy: acc.y }); acc.x = 0; acc.y = 0; } if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 12 && Date.now() - d.t < 350) { env("clic"); try { navigator.vibrate && navigator.vibrate(25); } catch (er) {} } d = null; });
     pad0.addEventListener("pointercancel", function () { d = null; });
     var appui = function (bid, f) { var b = document.getElementById(bid); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); f(); }; };
