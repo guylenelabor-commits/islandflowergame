@@ -27,7 +27,12 @@
   #tvLobby .tvT { margin-top: 8px; }
   .tvCur { position: fixed; left: 0; top: 0; width: 9vh; height: 9vh; border-radius: 50%; border: 4px solid; z-index: 9800; pointer-events: none; opacity: 0; transition: opacity .3s; }
   .tvCur.vu { opacity: 1; } .tvCur.clic { background: rgba(255,255,255,.45); }
-  #fete { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 8000; }
+  #fete { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 8000; touch-action: none; }
+  #feteX { position: fixed; top: 10px; right: 12px; z-index: 8100; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255,255,255,.9); color: #b0306a; font: 900 26px/40px Nunito, system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  #feteX[hidden] { display: none; }
+  .salEnvs { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin: 4px 0 8px; }
+  .salEnvs button { width: 15cqw; height: 10cqw; border-radius: 2cqw; border: 1cqw solid transparent; background-size: cover; background-position: center; padding: 0; cursor: pointer; }
+  .salEnvs button.ici { border-color: #2faa3a; }
   #fete[hidden] { display: none; }
   body.modeMan #phone, body.modeMan #fond { display: none !important; }
   #manette { position: fixed; inset: 0; z-index: 9500; display: flex; flex-direction: column; gap: 12px; padding: 18px 16px 22px; box-sizing: border-box; background: linear-gradient(#f7d6e4, #e9a8c4 55%, #b9658e); font-family: Nunito, system-ui, sans-serif; color: #fff; }
@@ -442,7 +447,7 @@
     if (VW < 600) {   // 8 nov. : sur téléphone, le jeu remonte sous la barre du haut et descend jusqu'en bas de l'écran
       haut = Math.round(shaut * .5); w = Math.min(Math.round(VW * 1.08), Math.round((VH - haut) * 523 / 1063)); h = Math.round(w * 1063 / 523);
     }
-    LARGE = VW >= 900 && VW > VH * 1.15 && !("ontouchstart" in window && VW < 1100); document.body.classList.toggle("large", LARGE);
+    LARGE = VW > VH * 1.15 && (VW >= 900 || "ontouchstart" in window); document.body.classList.toggle("large", LARGE);   // 13 nov. : téléphone tourné = le jeu en grand, comme sur l'ordinateur
     if (LARGE) {   // ordinateur : grand écran large ; la colonne du milieu garde les proportions du téléphone
       h = VH - 24; w = VW - 24; haut = 12;   // 12 nov. : le jeu prend toute la largeur, de bord à bord (pour la télé surtout)
       var jw = Math.round(h * 505 / 1001); jeuEl.style.left = Math.round((w - jw) / 2) + "px"; jeuEl.style.width = jw + "px";
@@ -636,17 +641,19 @@
   }
   function ecranAmis() {
     if (!sb || !session) {
-      afficher('<h2>' + icone("amis") + ' ' + t("friends") + '</h2><p>' + t("needAcc") + '</p><button class="gros-bouton" id="lg" type="button">' + t("login") + '</button><button class="slien" id="ret" type="button">' + t("back") + '</button>');
-      boutonRetour(); document.getElementById("lg").onclick = function (e) { e.stopPropagation(); ecranCompte("connexion"); }; return;
+      afficher('<h2>' + icone("amis") + ' ' + t("friends") + '</h2><button class="gros-bouton" id="salB" type="button">' + (lang === "fr" ? "Jouer à distance avec des amis" : "Play remotely with friends") + '</button><p>' + t("needAcc") + '</p><button class="second" id="lg" type="button">' + t("login") + '</button><button class="slien" id="ret" type="button">' + t("back") + '</button>');
+      boutonRetour(); document.getElementById("lg").onclick = function (e) { e.stopPropagation(); ecranCompte("connexion"); };
+      document.getElementById("salB").onclick = function (e) { e.stopPropagation(); ecranSalon(); }; return;
     }
     if (!monCode) { synchro().then(function () { if (monCode) ecranAmis(); else { afficher('<h2>' + icone("amis") + ' ' + t("friends") + '</h2><p>' + t("eGeneric") + '</p><button class="gros-bouton" id="ret" type="button">' + t("back") + '</button>'); boutonRetour(); } }); return; }
     var lien = location.origin + "/?ref=" + encodeURIComponent(monCode);
-    afficher('<h2>' + icone("amis") + ' ' + t("friends") + '</h2><p class="petit">' + t("myCode") + '</p><div class="scode"><b>' + echap(monCode) + '</b><button class="mini" id="part" type="button">' + t("share") + '</button></div>' +
+    afficher('<h2>' + icone("amis") + ' ' + t("friends") + '</h2><button class="gros-bouton" id="salB" type="button">' + (lang === "fr" ? "Jouer à distance avec des amis" : "Play remotely with friends") + '</button><p class="petit">' + t("myCode") + '</p><div class="scode"><b>' + echap(monCode) + '</b><button class="mini" id="part" type="button">' + t("share") + '</button></div>' +
       '<form class="sform" id="af" novalidate><label for="ac">' + t("addFriend") + '</label><div class="ligne"><input id="ac" type="text" maxlength="12" autocapitalize="characters" autocomplete="off" placeholder="' + echap(t("codePh")) + '"><button class="mini" type="submit">' + t("add") + '</button></div><div class="rouge" id="amsg"></div></form>' +
       '<p class="petit">🏆 ' + t("ranking") + '</p><div class="classement" id="clas"></div><button class="slien" id="ret" type="button">' + t("back") + '</button>');
     boutonRetour();
     var msg = document.getElementById("amsg");
     ["part", "af"].forEach(function (id) { document.getElementById(id).addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
+    document.getElementById("salB").onclick = function (e) { e.stopPropagation(); ecranSalon(); };
     function classement() {
       sb.rpc("flowers_ranking").then(function (r) {
         var z = document.getElementById("clas"); if (!z || r.error || !r.data) return;
@@ -1478,27 +1485,105 @@
   }
   // la partie à plusieurs : chacun son jardinier qui lance, sa jardinière et son panier, sa couleur de fleurs ; une de ses fleurs tombe par terre, et il a perdu ; le dernier qui attrape encore gagne
   var FETE_FOND = null, FLEUR_GAGNE = img("img/fl/rouge-01.webp");
+  // ---------- 13 nov. : jouer à distance avec des amis : chacun sur son téléphone, chez lui, dans la même partie ----------
+  var SAL = { on: false, code: "", hote: false, moi: -1, id: Math.random().toString(36).slice(2, 10), J: [null, null, null], env: 0, canal: null };
+  function JJ() { return SAL.on ? SAL.J : TV.J; }
+  function salEnv(ev, d) { if (SAL.canal) SAL.canal.send({ type: "broadcast", event: ev, payload: d || {} }); }
+  function salPartage() { salEnv("salon", { J: SAL.J.map(function (j) { return j ? { id: j.id, pseudo: j.pseudo } : null; }), env: SAL.env }); }
+  function salEtat() {   // mon score et si j'ai perdu, pour les autres ; le créateur juge
+    var F = TV.fete, j = SAL.J[SAL.moi]; if (!F || !j) return;
+    salEnv("etat", { k: SAL.moi, score: j.score, perdu: !!j.perdu, manche: F.manche }); if (SAL.hote) salJuge();
+  }
+  function salJuge() {   // le créateur de la partie : le premier qui a ses fleurs gagne la manche, sinon le dernier qui n'a rien fait tomber
+    var F = TV.fete; if (!SAL.hote || !F || F.fini || F.go > 0) return;
+    var pl = F.joueurs.filter(function (q) { return SAL.J[q] && !SAL.J[q].parti; }), g = pl.filter(function (q) { return (SAL.J[q].score || 0) >= F.cible; })[0];
+    var viv = pl.filter(function (q) { return !SAL.J[q].perdu; }), k = null;
+    if (g !== undefined) k = g; else if (viv.length <= 1 && pl.length >= 2) k = viv.length ? viv[0] : -1; else if (pl.length < 2 && viv.length === 0) k = -1;
+    if (k === null) return; salEnv("fin", { k: k, manche: F.manche }); feteFinManche(F, k, performance.now());
+  }
+  function salQuitter() {
+    if (SAL.canal) { try { salEnv(SAL.hote ? "ferme" : "quitter", { id: SAL.id }); } catch (e) {} var c = SAL.canal; setTimeout(function () { try { sb.removeChannel(c); } catch (e) {} }, 300); }
+    SAL.on = false; SAL.canal = null; SAL.code = ""; SAL.hote = false; SAL.moi = -1; SAL.J = [null, null, null];
+    if (TV.fete) { TV.fete.cv.hidden = true; TV.fete = null; } var fx = document.getElementById("feteX"); if (fx) fx.hidden = true;
+  }
+  function salOuvrir(code, hote) {
+    if (!sb) return; salQuitter();
+    SAL.on = true; SAL.code = code; SAL.hote = hote; SAL.J = [null, null, null]; SAL.moi = -1;
+    if (hote) { SAL.J[0] = { id: SAL.id, pseudo: (pseudo || "").slice(0, 14) || (lang === "fr" ? "Joueur 1" : "Player 1") }; SAL.moi = 0; }
+    var ch = SAL.canal = sb.channel("ifl-salon-" + code, { config: { broadcast: { self: false } } });
+    var vue = function () { if (document.getElementById("salJ")) ecranSalon(); };
+    ch.on("broadcast", { event: "rejoindre" }, function (m) { if (!SAL.hote) return; var p = m.payload || {}; if (!p.id) return;
+      var k = SAL.J.findIndex(function (j) { return j && j.id === p.id; });
+      if (k < 0 && !TV.fete) { k = SAL.J.indexOf(null); if (k >= 0) SAL.J[k] = { id: p.id, pseudo: String(p.pseudo || "").slice(0, 14) || (lang === "fr" ? "Joueur " : "Player ") + (k + 1) }; }
+      salPartage(); vue(); });
+    ch.on("broadcast", { event: "quitter" }, function (m) { if (!SAL.hote) return; var id = (m.payload || {}).id, k = SAL.J.findIndex(function (j) { return j && j.id === id; });
+      if (k > 0) { if (TV.fete) { SAL.J[k].parti = true; SAL.J[k].perdu = true; salJuge(); } else SAL.J[k] = null; } salPartage(); vue(); });
+    ch.on("broadcast", { event: "salon" }, function (m) { if (SAL.hote || TV.fete) return; var p = m.payload || {}; SAL.J = p.J || SAL.J; SAL.env = p.env | 0;
+      SAL.moi = SAL.J.findIndex(function (j) { return j && j.id === SAL.id; }); vue(); });
+    ch.on("broadcast", { event: "ferme" }, function () { if (SAL.hote) return; salQuitter(); ecranSalon(lang === "fr" ? "Le créateur a fermé la partie." : "The host closed the game."); });
+    ch.on("broadcast", { event: "debut" }, function (m) { if (SAL.hote) return; var p = m.payload || {}; SAL.J = p.J || SAL.J; SAL.env = p.env | 0; SAL.moi = SAL.J.findIndex(function (j) { return j && j.id === SAL.id; }); if (SAL.moi >= 0) feteDemarrer(); });
+    ch.on("broadcast", { event: "etat" }, function (m) { var p = m.payload || {}, F = TV.fete, j = SAL.J[p.k]; if (!F || !j || p.manche !== F.manche) return; j.score = p.score; j.perdu = !!p.perdu; salJuge(); });
+    ch.on("broadcast", { event: "fin" }, function (m) { var p = m.payload || {}, F = TV.fete; if (SAL.hote || !F || p.manche !== F.manche || F.fini) return; feteFinManche(F, p.k, performance.now()); });
+    ch.subscribe(function (st) { if (st !== "SUBSCRIBED") return;
+      if (hote) salPartage();
+      else { var essai = function () { if (!SAL.on || SAL.code !== code || SAL.moi >= 0) return; salEnv("rejoindre", { id: SAL.id, pseudo: (pseudo || "").slice(0, 14) }); setTimeout(essai, 2000); }; essai(); } });
+  }
+  function ecranSalon(msg) {
+    var fr = lang === "fr";
+    if (!SAL.on) {
+      afficher('<h2>' + (fr ? "Jouer à distance" : "Play remotely") + '</h2><p class="petit">' + (fr ? "Chacun sur son téléphone, chez lui, dans la même partie (jusqu'à 3)." : "Everyone on their own phone, at home, in the same game (up to 3).") + '</p>' + (msg ? '<p class="petit" style="color:#c0392b">' + echap(msg) + '</p>' : '') +
+        '<button class="gros-bouton" id="salCree" type="button">' + (fr ? "Créer une partie" : "Create a game") + '</button>' +
+        '<form class="sform" id="salF" novalidate><label for="salC">' + (fr ? "Rejoindre avec le code d'un ami" : "Join with a friend's code") + '</label><div class="ligne"><input id="salC" type="text" maxlength="5" autocapitalize="characters" autocomplete="off" placeholder="ABCDE"><button class="mini" type="submit">' + (fr ? "Rejoindre" : "Join") + '</button></div></form>' +
+        '<button class="slien" id="ret" type="button">' + t("back") + '</button>');
+      boutonRetour(ecranAmis);
+      ["salCree", "salF"].forEach(function (id) { document.getElementById(id).addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
+      document.getElementById("salCree").onclick = function (e) { e.stopPropagation(); var A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", c = ""; for (var i = 0; i < 5; i++) c += A[Math.floor(Math.random() * A.length)]; salOuvrir(c, true); ecranSalon(); };
+      document.getElementById("salF").onsubmit = function (e) { e.preventDefault(); e.stopPropagation(); var c = document.getElementById("salC").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 5) return; salOuvrir(c, false); ecranSalon(); };
+      return;
+    }
+    var lien = location.origin + "/?salon=" + SAL.code, n = SAL.J.filter(Boolean).length, FN = FLJN[fr ? "fr" : "en"];
+    var pl = SAL.J.map(function (j, k) { return '<div class="frow' + (k === SAL.moi ? ' moi' : '') + '"><span>' + (j ? echap(j.pseudo) + (k === SAL.moi ? ' (' + t("you") + ')' : '') : (fr ? "place libre" : "free place")) + '</span><b style="color:' + COULJ[k] + ';text-shadow:0 1px 0 rgba(0,0,0,.4)">' + (fr ? "fleurs " : "") + FN[k] + '</b></div>'; }).join("");
+    afficher('<h2>' + (fr ? "Jouer à distance" : "Play remotely") + '</h2><p class="petit">' + (fr ? "Code de la partie" : "Game code") + '</p><div class="scode"><b>' + SAL.code + '</b><button class="mini" id="salP" type="button">' + t("share") + '</button></div>' +
+      '<div class="classement" id="salJ">' + pl + '</div>' +
+      (SAL.hote ? '<p class="petit">' + (fr ? "Environnement" : "Scenery") + '</p><div class="salEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '"' + (SAL.env === i ? ' class="ici"' : '') + ' style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div>' +
+        '<button class="gros-bouton" id="salGo" type="button"' + (n < 2 ? ' disabled style="opacity:.5"' : '') + '>' + (fr ? "Commencer" : "Start") + '</button>'
+        : '<p class="petit">' + (SAL.moi >= 0 ? (fr ? "En attente du créateur de la partie…" : "Waiting for the host…") : (fr ? "Connexion à la partie…" : "Joining the game…")) + '</p>') +
+      '<button class="slien" id="ret" type="button">' + (fr ? "Quitter la partie" : "Leave the game") + '</button>');
+    boutonRetour(function () { salQuitter(); ecranSalon(); });
+    var sp = document.getElementById("salP"); sp.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    sp.onclick = function (e) { e.stopPropagation(); var txt = (fr ? "Viens jouer avec moi sur Island Flower Game ! Code : " : "Come play with me on Island Flower Game! Code: ") + SAL.code;
+      if (navigator.share) { navigator.share({ text: txt, url: lien }).catch(function () {}); return; }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt + " " + lien).then(function () { sp.textContent = t("copied"); }, function () {}); };
+    document.querySelectorAll(".salEnvs button").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); SAL.env = +b.dataset.e; salPartage(); ecranSalon(); }; });
+    var go = document.getElementById("salGo");
+    if (go) { go.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); go.onclick = function (e) { e.stopPropagation(); if (SAL.J.filter(Boolean).length < 2) return;
+      SAL.J.forEach(function (j) { if (j) { j.parti = false; j.perdu = false; j.score = 0; } }); salEnv("debut", { J: SAL.J.map(function (j) { return j ? { id: j.id, pseudo: j.pseudo } : null; }), env: SAL.env }); feteDemarrer(); }; }
+  }
   function feteDemarrer() {
-    var pl = [0, 1, 2].filter(function (k) { return TV.J[k]; }), n = pl.length, cvF = document.getElementById("fete");
-    if (!cvF) { cvF = document.createElement("canvas"); cvF.id = "fete"; document.body.appendChild(cvF); }
-    FETE_FOND = img(ENVS[TV.env] || ENVS[0]);
-    cvF.hidden = false; tvLobbyVu(false); enJeu = false; voile.hidden = true;
-    var F = TV.fete = { cv: cvF, g: cvF.getContext("2d"), dern: performance.now(), manche: 0, NB: NB_MANCHES, vict: {}, cols: [] };
+    var pl = [0, 1, 2].filter(function (k) { return JJ()[k]; }), n = pl.length, cvF = document.getElementById("fete");
+    if (!cvF) { cvF = document.createElement("canvas"); cvF.id = "fete"; document.body.appendChild(cvF);
+      cvF.addEventListener("pointerdown", function (e) { e.preventDefault(); if (SAL.on && SAL.moi >= 0) feteClic(SAL.moi, e.clientX, e.clientY); });   // à distance : on touche ses fleurs avec le doigt
+      var fx = document.createElement("button"); fx.id = "feteX"; fx.type = "button"; fx.textContent = "×"; fx.hidden = true; document.body.appendChild(fx);
+      fx.onclick = function (e) { e.stopPropagation(); salQuitter(); ecranSalon(); }; }
+    FETE_FOND = img(ENVS[SAL.on ? SAL.env : TV.env] || ENVS[0]);
+    cvF.hidden = false; if (TV.on) tvLobbyVu(false); enJeu = false; voile.hidden = true; document.getElementById("feteX").hidden = !SAL.on;
+    var F = TV.fete = { cv: cvF, g: cvF.getContext("2d"), dern: performance.now(), manche: 0, NB: NB_MANCHES, vict: {}, cols: [], joueurs: pl };
     pl.forEach(function (k) { F.vict[k] = 0; });
-    feteManche(F, pl);
+    feteManche(F, SAL.on ? [SAL.moi] : pl);
     tvEtat(); requestAnimationFrame(feteBoucle);
   }
   var NB_MANCHES = 5;   // 12 nov. : une partie = 5 manches ; on peut perdre une manche et continuer ; à la fin, celui qui a gagné le plus de manches gagne
   function feteManche(F, pl) {
     pl = pl || F.cols.map(function (c) { return c.k; }); var n = pl.length; F.manche++; F.t0 = performance.now(); F.fini = 0; F.fl = []; F.go = 3; F.finPartie = false;
     F.cible = 10 + 2 * (F.manche - 1);   // le nombre de fleurs à réunir pour gagner la manche : 10, puis 2 de plus à chaque manche
-    F.cols = pl.map(function (k, i) { var j = TV.J[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0); j.score = 0; j.faux = 0; } return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 3.6, tous: 1.6, lance: 0, panier: [], pb: null }; });
+    F.joueurs.forEach(function (k) { var j = JJ()[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0) || !!j.parti; j.score = 0; j.faux = 0; } });
+    F.cols = pl.map(function (k, i) { return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 3.6, tous: 1.6, lance: 0, panier: [], pb: null }; });
   }
-  window.IFL_DBG.ffm = function (k) { feteFinManche(TV.fete, k, performance.now()); };
+  window.IFL_DBG.ffm = function (k) { feteFinManche(TV.fete, k, performance.now()); }; Object.defineProperty(window.IFL_DBG, "sal", { get: function () { return SAL; } });
   function feteFinManche(F, k, now) {
     if (F.fini) return; F.fini = now; F.gagnant = k; F.temps = Math.max(0, (now - F.t0) / 1000 - 3); if (k >= 0) { F.vict[k]++; F.trophees = F.trophees || []; F.trophees.push({ k: k, n: F.vict[k], t0: now }); }   // une grosse fleur rouge vient se poser en haut de sa place
     bip(523, .12, "triangle", .08); setTimeout(function () { bip(659, .12, "triangle", .08); }, 120); setTimeout(function () { bip(784, .2, "triangle", .08); }, 240);
-    if (F.manche >= F.NB) { var bv = -1, ex = []; F.cols.forEach(function (c) { var v = F.vict[c.k] || 0; if (v > bv) { bv = v; ex = [c.k]; } else if (v === bv) ex.push(c.k); });
+    if (F.manche >= F.NB) { var bv = -1, ex = []; F.joueurs.forEach(function (q) { if (JJ()[q] && JJ()[q].parti) return; var v = F.vict[q] || 0; if (v > bv) { bv = v; ex = [q]; } else if (v === bv) ex.push(q); });
       if (ex.length === 1) { F.finPartie = true; F.champion = ex[0]; F.bataille = null; } else F.bataille = ex; }   // égalité : les ex-aequo font une bataille, jusqu'à ce qu'il y ait un seul gagnant
     tvEtat();
   }
@@ -1514,10 +1599,10 @@
     var F = TV.fete; if (!F || F.go > 0 || F.fini) return; var best = null, bd = 1e9;
     F.fl.forEach(function (f) { if (f.pris || f.tombe) return; var d = Math.hypot(f.x - x, f.y - y); if (d < f.h * .8 && d < bd) { bd = d; best = f; } });
     if (!best) return;
-    var j = TV.J[k]; if (!j || j.perdu) return;
+    var j = JJ()[k]; if (!j || j.perdu) return;
     if (best.k !== k) { bip(1400, .07, "sine", .05); j.faux = (j.faux || 0) + 1; if (j.faux >= 3) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } return; }   // pas sa fleur : un petit « ping » ; à la 3e, il perd la manche
     best.pris = true; best.pt = 0; best.px = best.x; best.py = best.y; j.score++; chime(j.score % 8 + 1);
-    if (j.score >= F.cible) feteFinManche(F, k, performance.now());   // le premier qui a réuni ses fleurs gagne la manche
+    if (SAL.on) salEtat(); else if (j.score >= F.cible) feteFinManche(F, k, performance.now());   // le premier qui a réuni ses fleurs gagne la manche
     var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.1, c.D - .08); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
   }
   function feteBoucle(now) {
@@ -1528,30 +1613,32 @@
     if (FETE_FOND && FETE_FOND.naturalWidth) { var k0 = Math.max(W2 / FETE_FOND.naturalWidth, H2 / FETE_FOND.naturalHeight); drawImg0.call(g, FETE_FOND, (W2 - FETE_FOND.naturalWidth * k0) / 2, (H2 - FETE_FOND.naturalHeight * k0) / 2, FETE_FOND.naturalWidth * k0, FETE_FOND.naturalHeight * k0); } else { g.fillStyle = "#cfe6b8"; g.fillRect(0, 0, W2, H2); }
     var sol = H2 * .93, hautM = H2 * .2, fr = lang === "fr";
     if (F.go > 0) F.go -= dt;
-    var vivants = F.cols.filter(function (c) { return TV.J[c.k] && !TV.J[c.k].perdu; });
+    var vivants = F.cols.filter(function (c) { return JJ()[c.k] && !JJ()[c.k].perdu; });
     if (!F.fini && F.go <= 0) {
-      F.cols.forEach(function (c) { var j = TV.J[c.k]; if (!j || j.perdu) return; c.prochain -= dt; if (c.prochain <= 0) { c.prochain = c.tous * (.8 + Math.random() * .4); c.lance = .35;   // le jardinier lance une fleur de sa couleur à sa jardinière
+      F.cols.forEach(function (c) { var j = JJ()[c.k]; if (!j || j.perdu) return; c.prochain -= dt; if (c.prochain <= 0) { c.prochain = c.tous * (.8 + Math.random() * .4); c.lance = .35;   // le jardinier lance une fleur de sa couleur à sa jardinière
         var col = feteCol(c, W2), im = img("img/fl/" + FLJ[c.k] + "-" + pad(1 + Math.floor(Math.random() * 10)) + ".webp"), h = Math.min(col.w * .22, H2 * .13);
         F.fl.push({ k: c.k, im: im, x0: col.x, y0: hautM + H2 * .1, x1: col.x + (Math.random() - .5) * col.w * .55, t: 0, D: c.D, h: h, rot: (Math.random() - .5) * .6, x: col.x, y: hautM }); } });
       F.fl.forEach(function (f) { if (f.pris || f.tombe) return; f.t += dt / f.D; var u = Math.min(1, f.t); f.x = f.x0 + (f.x1 - f.x0) * u + Math.sin(f.t * 5) * 6; f.y = f.y0 + (sol - f.y0) * Math.pow(u, 1.25);
-        if (u >= 1) { f.tombe = true; var j = TV.J[f.k]; if (j && !j.perdu) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } } });
-      if (vivants.length <= 1 && F.cols.length >= 2) feteFinManche(F, vivants.length ? vivants[0].k : -1, now);   // le dernier qui n'a rien fait tomber gagne la manche
+        if (u >= 1) { f.tombe = true; var j = JJ()[f.k]; if (j && !j.perdu) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); if (SAL.on) salEtat(); } } });
+      if (!SAL.on && vivants.length <= 1 && F.cols.length >= 2) feteFinManche(F, vivants.length ? vivants[0].k : -1, now);   // le dernier qui n'a rien fait tomber gagne la manche
     }
     // les jardiniers en haut, les jardinières en bas
-    F.cols.forEach(function (c) { var col = feteCol(c, W2), j = TV.J[c.k], perdu = j && j.perdu; c.lance = Math.max(0, c.lance - dt);
+    F.cols.forEach(function (c) { var col = feteCol(c, W2), j = JJ()[c.k], perdu = j && j.perdu; c.lance = Math.max(0, c.lance - dt);
       var finP = F.finPartie && F.fini, danse = finP && c.k === F.champion, fd = Math.floor((now - F.fini) / 1000 * 2.5);   // fin de partie : le gagnant danse avec sa jardinière, les autres restent immobiles, un peu tristes
       g.save(); if (finP && !danse) { g.globalAlpha = .6; g.filter = "grayscale(.75) brightness(.85)"; } else if (perdu && !finP) g.globalAlpha = .45;
       var MI = danse ? MAND[fd % MAND.length] : finP ? MANS[3] : MANS[c.lance > 0 ? 2 : 3]; if (danse && !(MI && MI.naturalWidth)) MI = MANS[3]; if (MI && MI.naturalWidth) { var mh = H2 * .2, mw = mh * MI.naturalWidth / MI.naturalHeight; feteDessine(g, MI, col.x - mw / 2, hautM - mh * .55, mw, mh); }
       var FI = danse ? FEMD[fd % FEMD.length] : finP ? FEMP[4] : FEMP[perdu ? 9 : 4]; if (danse && !(FI && FI.naturalWidth)) FI = FEMP[4]; if (FI && FI.naturalWidth) { var fh = H2 * .27, fw = fh * FI.naturalWidth / FI.naturalHeight; feteDessine(g, FI, col.x - fw / 2, sol - fh, fw, fh); } c.pb = { x: col.x, y: sol - H2 * .27 * .45 };
       c.panier.slice(-10).forEach(function (im, q, a) { if (!im.naturalWidth) return; var h2 = H2 * .045, w2 = h2 * im.naturalWidth / im.naturalHeight, an = a.length > 1 ? -.6 + 1.2 * q / (a.length - 1) : 0; g.save(); g.translate(c.pb.x + Math.sin(an) * H2 * .025, c.pb.y - H2 * .01); g.rotate(an * .6); feteDessine(g, im, -w2 / 2, -h2, w2, h2); g.restore(); });
       g.restore();
-      g.save(); g.font = "800 " + Math.round(H2 * .03) + "px Nunito, system-ui, sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = COULJ[c.k];
+      g.save(); g.font = "800 " + Math.round(Math.min(H2 * .03, W2 * .05)) + "px Nunito, system-ui, sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = COULJ[c.k];
       var lab = (j ? j.pseudo : "") + " · " + (j ? j.score : 0) + "/" + F.cible; g.strokeText(lab, col.x, H2 * .045); g.fillText(lab, col.x, H2 * .045);
       if (perdu) { g.font = "900 " + Math.round(H2 * .06) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(fr ? "Perdu" : "Out", col.x, H2 * .5); g.fillText(fr ? "Perdu" : "Out", col.x, H2 * .5); }
       g.restore(); });
+    if (SAL.on) { var aut = F.joueurs.filter(function (q) { return q !== SAL.moi && SAL.J[q]; }).map(function (q) { var jq = SAL.J[q]; return jq.pseudo + " " + (jq.perdu ? (fr ? "perdu" : "out") : (jq.score || 0) + "/" + F.cible) + " ★" + (F.vict[q] || 0); }).join("   ·   ");   // les amis à distance : où ils en sont
+      if (aut) { g.save(); g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = "#fff"; g.font = "800 " + Math.round(Math.min(H2 * .026, W2 * .042)) + "px Nunito, system-ui, sans-serif"; g.strokeText(aut, W2 / 2, H2 * .19); g.fillText(aut, W2 / 2, H2 * .19); g.restore(); } }
     // les manches gagnées : une grosse fleur rouge par manche, en haut de la place du gagnant
     (F.trophees || []).forEach(function (tr) { var c = F.cols.filter(function (q) { return q.k === tr.k; })[0]; if (!c) return; var col = feteCol(c, W2), im = FLEUR_GAGNE; if (!im.naturalWidth) return;
-      var hh = H2 * .085, ww = hh * im.naturalWidth / im.naturalHeight, tx = col.x + (tr.n - 1 - (F.NB - 1) / 2) * ww * .95 + col.w * .28, ty = H2 * .07, u = Math.min(1, (now - tr.t0) / 900), e = 1 - Math.pow(1 - u, 3), x = W2 / 2 + (tx - W2 / 2) * e, y = H2 * .45 + (ty - H2 * .45) * e - Math.sin(e * 3.14) * H2 * .1, sc = 1 + (1 - e) * 1.2;
+      var hh = H2 * .085, ww = hh * im.naturalWidth / im.naturalHeight, tx = SAL.on ? W2 * .7 + ((tr.n - 1) % 3) * ww * .95 : col.x + (tr.n - 1 - (F.NB - 1) / 2) * ww * .95 + col.w * .28, ty = SAL.on ? H2 * .11 + Math.floor((tr.n - 1) / 3) * hh * .9 : H2 * .07, u = Math.min(1, (now - tr.t0) / 900), e = 1 - Math.pow(1 - u, 3), x = W2 / 2 + (tx - W2 / 2) * e, y = H2 * .45 + (ty - H2 * .45) * e - Math.sin(e * 3.14) * H2 * .1, sc = 1 + (1 - e) * 1.2;
       g.save(); g.shadowColor = "#ff2a2a"; g.shadowBlur = 16; g.translate(x, y); g.scale(sc, sc); feteDessine(g, im, -ww / 2, -hh / 2, ww, hh); g.restore(); });
     // les fleurs
     F.fl = F.fl.filter(function (f) { return !(f.pris && f.pt >= 1) && !(f.tombe && (f.tt || 0) > 1.2); });
@@ -1565,14 +1652,15 @@
     g.strokeText(cr, W2 / 2, H2 * .1); g.fillText(cr, W2 / 2, H2 * .1);
     g.font = "800 " + Math.round(H2 * .028) + "px Nunito, system-ui, sans-serif"; var mt = F.manche > F.NB ? (fr ? "Bataille !" : "Tie-break!") : (fr ? "Manche " : "Round ") + F.manche + " / " + F.NB; g.strokeText(mt, W2 / 2, H2 * .145); g.fillText(mt, W2 / 2, H2 * .145); g.font = "900 " + Math.round(H2 * .04) + "px Nunito, system-ui, sans-serif";
     if (F.go > 0) { g.font = "900 " + Math.round(H2 * .2) + "px Nunito, system-ui, sans-serif"; var gv = String(Math.ceil(F.go)); g.strokeText(gv, W2 / 2, H2 * .55); g.fillText(gv, W2 / 2, H2 * .55); }
-    if (F.fini) { var gj = TV.J[F.gagnant], txt = (F.manche > F.NB ? (fr ? "Bataille" : "Tie-break") : (fr ? "Manche " : "Round ") + F.manche) + " : " + (gj ? gj.pseudo + (fr ? " gagne · " : " wins · ") + cr : (fr ? "personne" : "nobody"));
-      g.font = "900 " + Math.round(H2 * .055) + "px Nunito, system-ui, sans-serif"; g.fillStyle = gj ? COULJ[F.gagnant] : "#fff"; g.strokeText(txt, W2 / 2, H2 * .38); g.fillText(txt, W2 / 2, H2 * .38);
-      if (F.bataille && !F.finPartie) { var tb = (fr ? "Égalité ! Bataille : " : "Tie! Tie-break: ") + F.bataille.map(function (q) { return TV.J[q] ? TV.J[q].pseudo : ""; }).join(fr ? " contre " : " vs ");
-        g.font = "900 " + Math.round(H2 * .06) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(tb, W2 / 2, H2 * .5); g.fillText(tb, W2 / 2, H2 * .5); }
-      if (F.finPartie) { var cj = TV.J[F.champion], t2 = cj ? cj.pseudo + (fr ? " gagne la partie ! (" : " wins the game! (") + F.vict[F.champion] + (fr ? " manches)" : " rounds)") : (fr ? "Égalité !" : "It's a tie!");
-        g.font = "900 " + Math.round(H2 * .075) + "px Nunito, system-ui, sans-serif"; g.fillStyle = cj ? COULJ[F.champion] : "#fff"; g.strokeText(t2, W2 / 2, H2 * .5); g.fillText(t2, W2 / 2, H2 * .5); }
+    if (F.fini) { var gj = JJ()[F.gagnant], txt = (F.manche > F.NB ? (fr ? "Bataille" : "Tie-break") : (fr ? "Manche " : "Round ") + F.manche) + " : " + (gj ? gj.pseudo + (fr ? " gagne · " : " wins · ") + cr : (fr ? "personne" : "nobody"));
+      g.font = "900 " + Math.round(Math.min(H2 * .055, W2 * .055)) + "px Nunito, system-ui, sans-serif"; g.fillStyle = gj ? COULJ[F.gagnant] : "#fff"; g.strokeText(txt, W2 / 2, H2 * .38); g.fillText(txt, W2 / 2, H2 * .38);
+      if (F.bataille && !F.finPartie) { var tb = (fr ? "Égalité ! Bataille : " : "Tie! Tie-break: ") + F.bataille.map(function (q) { return JJ()[q] ? JJ()[q].pseudo : ""; }).join(fr ? " contre " : " vs ");
+        g.font = "900 " + Math.round(Math.min(H2 * .06, W2 * .05)) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(tb, W2 / 2, H2 * .5); g.fillText(tb, W2 / 2, H2 * .5); }
+      if (F.finPartie) { var cj = JJ()[F.champion], t2 = cj ? cj.pseudo + (fr ? " gagne la partie ! (" : " wins the game! (") + F.vict[F.champion] + (fr ? " manches)" : " rounds)") : (fr ? "Égalité !" : "It's a tie!");
+        g.font = "900 " + Math.round(Math.min(H2 * .075, W2 * .06)) + "px Nunito, system-ui, sans-serif"; g.fillStyle = cj ? COULJ[F.champion] : "#fff"; g.strokeText(t2, W2 / 2, H2 * .5); g.fillText(t2, W2 / 2, H2 * .5); }
       else if (now - F.fini > 3500) { feteManche(F); tvEtat(); }   // manche suivante
-      if (F.finPartie && now - F.fini > 8000) { F.cv.hidden = true; TV.fete = null; TV.J.forEach(function (j) { if (j) j.perdu = false; }); tvLobby(); tvLobbyVu(true); accueil(); tvEtat(); } }
+      if (F.finPartie && now - F.fini > 8000) { F.cv.hidden = true; TV.fete = null; JJ().forEach(function (j) { if (j) j.perdu = false; }); document.getElementById("feteX").hidden = true;
+        if (SAL.on) ecranSalon(); else { tvLobby(); tvLobbyVu(true); accueil(); tvEtat(); } } }
     g.restore();
   }
   // le téléphone : la manette de sa place
@@ -1610,6 +1698,7 @@
   renderTexts(); accueil();
   if (PQS.get("manette")) manetteInit();
   if (PQS.get("tv")) tvInit();
+  if (PQS.get("salon")) setTimeout(function () { var c = String(PQS.get("salon")).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5); try { history.replaceState(null, "", location.pathname); } catch (e) {} if (c.length === 5) { salOuvrir(c, false); ecranSalon(); } }, 600);
 })();
 
 </script>
