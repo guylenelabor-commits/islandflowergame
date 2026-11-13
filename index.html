@@ -360,6 +360,27 @@
   // ---------- écran & cadre ----------
   jeuEl = document.getElementById("jeu"); voile = document.getElementById("voile"); hud = document.getElementById("hud");
   var cv = document.getElementById("cv"), ctx = cv.getContext("2d"), W = 300, H = 660, dpr = 1, PW = 300, OX = 0, LARGE = false;
+  // 12 nov. : le « gonflage » (comme Island Fishing) : chaque image dessinée dans le jeu (fleurs, jardinière, jardinier, panier, vase) reçoit du volume
+  var VOL = typeof WeakMap !== "undefined" ? new WeakMap() : null, FILTRE = (function () { try { var c = document.createElement("canvas").getContext("2d"); c.filter = "blur(2px)"; return c.filter === "blur(2px)"; } catch (e) { return false; } })();
+  function volume(im) {
+    if (!VOL || !im || !im.naturalWidth) return im;
+    var v = VOL.get(im); if (v) return v;
+    if (im._dec !== 2) { if (!im._dec) { im._dec = 1; var fin = function () { im._dec = 2; }; if (im.decode) im.decode().then(fin, fin); else fin(); } return im; }
+    var k = Math.min(1, 420 / im.naturalWidth), w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+    var c = document.createElement("canvas"); c.width = w; c.height = h; var x = c.getContext("2d"); x.drawImage(im, 0, 0, w, h);
+    if (FILTRE) { var m = document.createElement("canvas"); m.width = w; m.height = h; var mx = m.getContext("2d");
+      mx.drawImage(im, 0, 0, w, h); mx.globalCompositeOperation = "source-in"; mx.fillStyle = "#2a0f1e"; mx.fillRect(0, 0, w, h);
+      mx.globalCompositeOperation = "destination-out"; mx.filter = "blur(" + Math.max(3, Math.round(Math.min(w, h) * .07)) + "px)"; mx.drawImage(im, 0, 0, w, h); mx.filter = "none";
+      x.globalAlpha = .42; x.globalCompositeOperation = "source-atop"; x.drawImage(m, 0, 0); x.globalAlpha = 1; }
+    x.globalCompositeOperation = "source-atop";
+    var gv = x.createLinearGradient(0, 0, 0, h); gv.addColorStop(0, "rgba(255,255,255,.28)"); gv.addColorStop(.38, "rgba(255,255,255,.05)"); gv.addColorStop(.62, "rgba(0,0,0,0)"); gv.addColorStop(1, "rgba(40,10,30,.34)");
+    x.fillStyle = gv; x.fillRect(0, 0, w, h);
+    var gr = x.createRadialGradient(w * .55, h * .3, 0, w * .55, h * .3, Math.max(w, h) * .38); gr.addColorStop(0, "rgba(255,255,255,.25)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = gr; x.fillRect(0, 0, w, h);
+    VOL.set(im, c); return c;
+  }
+  var drawImg0 = ctx.drawImage;
+  ctx.drawImage = function (im, a, b, c, d) { if (arguments.length <= 5 && im && im.tagName === "IMG") { var v = volume(im); return arguments.length === 3 ? drawImg0.call(this, v, a, b, im.naturalWidth, im.naturalHeight) : drawImg0.call(this, v, a, b, c, d); } return drawImg0.apply(this, arguments); };
   var phoneEl = document.getElementById("phone"), fondEl = document.getElementById("fond");
   function taille() {
     var r = cv.getBoundingClientRect(), rj = jeuEl.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1); W = Math.max(1, r.width); H = Math.max(1, r.height); PW = Math.max(1, rj.width); OX = rj.left - r.left;
@@ -696,7 +717,7 @@
   function dessinePerso(dt) {
     tPerso += dt; kickM = Math.max(0, kickM - dt * 3); kickF = Math.max(0, kickF - dt * 2.6); hurtF = Math.max(0, hurtF - dt * 3);
     var ax = femX, ay = femY;   // 8 nov. : c'est le joueur qui la fait courir (droite, gauche, vers le fond, vers l'avant)
-    if (enJeu && !fini && !pause) { femX += Math.max(-dt * .95, Math.min(dt * .95, femTX - femX)); femY += Math.max(-dt * .6, Math.min(dt * .6, femTY - femY)); }
+    if (enJeu && !fini && !pause) { femX = .5; femY = .93; }   // 12 nov. : elle ne court plus : elle reste en bas avec son panier
     else if (gerbe >= 0) { femY += Math.max(-dt * .5, Math.min(dt * .5, .95 - femY)); femX += Math.max(-dt * .5, Math.min(dt * .5, (LARGE ? .62 : .58) - femX)); }   // 8 nov. : elle danse au sol, loin du vase   // 8 nov. : pour danser, elle revient devant, sur le sol
     femV = dt > 0 ? (femX - ax) / dt * W : 0; var femVY = dt > 0 ? (femY - ay) / dt : 0; if (Math.abs(femX - ax) > 1e-4) femDir = femX < ax ? -1 : 1;
     var bouge = Math.abs(femV) > PW * .05 || Math.abs(femVY) > .05;
@@ -729,6 +750,16 @@
   function panier() { var h = femHaut(femY), bg = femBouge || kickF > .3; return { x: femX * W + (bg ? femDir * h * .27 : 0), y: femY * H - h * (bg ? .58 : .45), w: h * .37 }; }   /* 8 nov. : le panier est dans ses mains (selon la pose) */
   function choisirVase() { var v = D ? VASES[Math.floor((D.n - 1) / 10) % 50] : null; VASE = v && v.complete && v.naturalWidth ? v : VASE0; }   // 8 nov. : un vase différent tous les 10 niveaux (50 vases, puis on recommence)
   function vasePos() { var h = H * .2, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: LARGE ? OX * .55 : W * .12, b: H * .99, h: h, w: w }; }
+  var panierFl = [], versVase = -1;
+  function dessinePanierFl(dt) {   // 12 nov. : les fleurs attrapées dépassent du panier ; à la fin du niveau, elles volent jusqu'au vase
+    var pb = panier(), n = Math.min(panierFl.length, 14), vp = vasePos();
+    if (versVase >= 0) versVase += dt;
+    for (var k = 0; k < n; k++) { var im = panierFl[panierFl.length - n + k]; if (!im.naturalWidth) continue;
+      var fh = pb.w * .55, fw = fh * im.naturalWidth / im.naturalHeight, ang = n > 1 ? -.7 + 1.4 * k / (n - 1) : 0, x = pb.x + Math.sin(ang) * pb.w * .25, y = pb.y - pb.w * .12, r = ang * .6, sc = 1;
+      if (versVase >= 0) { var u = Math.max(0, Math.min(1, (versVase - k * .05) / 1.1)), e = 1 - Math.pow(1 - u, 2); x += (vp.x - x) * e; y += (vp.b - vp.h * .85 - y) * e - Math.sin(e * 3.1416) * H * .18; sc = 1 + .6 * e; if (u >= 1) continue; }
+      ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.scale(sc, sc); ctx.drawImage(im, -fw / 2, -fh, fw, fh); ctx.restore(); }
+    if (versVase >= 1.1 + n * .05 && panierFl.length) { vaseFl = panierFl.slice(); panierFl = []; versVase = -1; gerbe = -2; setTimeout(function () { if (gerbe === -2) gerbe = 0; }, 900); }   // dans le vase, puis la gerbe
+  }
   function dessineVase(dt) {
     choisirVase(); if (!VASE.complete || !VASE.naturalWidth) return; var v = vasePos(), n = Math.min(vaseFl.length, 15), top = v.b - v.h, px = v.x, py = top + v.h * .3;
     if (gerbe >= 0) gerbe += dt;
@@ -790,9 +821,9 @@
       if (tAcc >= D.every) { tAcc = 0; spawn(); }
       for (var i = fl.length - 1; i >= 0; i--) {
         var f = fl[i];
-        if (f.st === 0 && f.t > .55) { var pp = posDe(f), pb = panier(); if (Math.abs(pp.x - pb.x) < pb.w * .55 && Math.abs(pp.y - pb.y) < pb.w * .42) { attraper(f, pp); continue; } }   // 8 nov. : attrapée dans le panier
+        // 12 nov. : les fleurs se prennent seulement avec le doigt
         if (f.st === 0) { f.t += dt / f.D; f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
-        else { f.ct += dt / (f.ok ? 1.1 : .6); if (f.ct >= 1) fl.splice(i, 1); }
+        else { f.ct += dt / (f.auPanier ? .7 : f.ok ? 1.1 : .6); if (f.ct >= 1) { fl.splice(i, 1); if (f.auPanier) panierFl.push(f.im); } }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
       // 8 nov. : les fleurs dans un carré (fleurs de cristal) sont retirées du jeu
@@ -858,9 +889,10 @@
       else {
         var u = Math.min(1, f.ct), e = 1 - Math.pow(1 - u, 2);
         var vp = vasePos(), pb = panier();
-        if (f.ok) { if (u < .45) { var e1 = 1 - Math.pow(1 - u / .45, 2); p = { x: f.cx + (pb.x - f.cx) * e1, y: f.cy + (pb.y - pb.w * .2 - f.cy) * e1 }; s = 1 - .35 * e1; }   // d'abord dans le panier
+        if (f.ok && f.auPanier) { p = { x: f.cx + (pb.x - f.cx) * e, y: f.cy + (pb.y - pb.w * .2 - f.cy) * e - Math.sin(e * 3.1416) * H * .06 }; s = 1 - .5 * e; }   // 12 nov. : la fleur vole jusque dans le panier
+        else if (f.ok) { if (u < .45) { var e1 = 1 - Math.pow(1 - u / .45, 2); p = { x: f.cx + (pb.x - f.cx) * e1, y: f.cy + (pb.y - pb.w * .2 - f.cy) * e1 }; s = 1 - .35 * e1; }   // d'abord dans le panier
           else { var e2 = (u - .45) / .55; p = { x: pb.x + (vp.x - pb.x) * e2, y: pb.y - pb.w * .2 + (vp.b - vp.h * .9 - pb.y + pb.w * .2) * e2 - Math.sin(e2 * 3.1416) * H * .12 }; s = .65 - .1 * e2; }   // puis dans le vase
-          a = u > .92 ? (1 - u) / .08 : 1; }
+          a = f.auPanier ? 1 : u > .92 ? (1 - u) / .08 : 1; }
         else { p = { x: f.cx, y: f.cy + e * H * .12 }; s = 1 - .45 * e; a = 1 - e; }
         rot = f.rot * (1 - e);
       }
@@ -876,7 +908,7 @@
       if (f.st === 0 && f.bon) { var cv = contourVert(f.im), mv = cv.m * w / f.im.naturalWidth; ctx.drawImage(cv.c, -w / 2 - mv, -h / 2 - mv, w + 2 * mv, h + 2 * mv); }   // 8 nov. : contour vert sur les fleurs à attraper
       ctx.drawImage(f.im, -w / 2, -h / 2, w, h); ctx.restore();
     }
-    dessineVase(dt || 0);
+    dessinePanierFl(dt || 0); dessineVase(dt || 0);
   }
   // halo doré préparé une seule fois par image (plus léger pour les petits appareils)
   function lueur(im) {
@@ -889,7 +921,7 @@
   function toucher(e) {   // 8 nov. : on touche (ou on glisse le doigt) là où elle doit courir
     if (!enJeu || pause || fini) return; if (e.type === "pointerdown") appui = true; else if (!appui) return;
     var r = cv.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-    if (e.type === "pointerdown" && !modeDur) {   // 8 nov. : on peut aussi taper sur la fleur : elle part dans le panier et la jardinière court la chercher
+    if (e.type === "pointerdown") {   // 12 nov. : on touche la fleur avec le doigt : elle part dans le panier
       var best = null, bp = null, bs = 0, bd = 1e9, X = px * W, Y = py * H;
       for (var i = fl.length - 1; i >= 0; i--) {
         var f = fl[i]; if (f.st !== 0 || !f.im.naturalWidth) continue;
@@ -899,9 +931,8 @@
           if (!best || sc > bs || (sc === bs && d < bd)) { best = f; bp = q; bs = sc; bd = d; }
         }
       }
-      if (best) { femTX = best.x1; femTY = best.fy || femTY; attraper(best, bp); appui = false; return; }
+      if (best) { attraper(best, bp); appui = false; return; }
     }
-    femTX = Math.max(.08, Math.min(.92, px)); femTY = Math.max(FY0, Math.min(FY1, py));
   }
 
   function attraper(f, p) {
@@ -910,7 +941,7 @@
     if (f.cr) { f.ok = true; cris.got++; kickF = 1; chime(cris.got + 2); bulle("+1 ❤️", "oui", p.x, p.y); return; }
     if (f.spike) { f.ok = false; piquer(p, true); return; }
     if (matche(f.k, D.kinds)) {
-      f.ok = true; kickF = 1; caught++; vaseFl.push(f.im); if (vies < D.vies) vies++; bonSansFaute(); prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
+      f.ok = true; f.auPanier = true; kickF = 1; caught++; if (vies < D.vies) vies++; bonSansFaute(); prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
       if (caught >= D.need) gagne();
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
@@ -1199,13 +1230,14 @@
     if (fini) return; creditCristal(); var r = tLeft / D.time, sauve = 0;
     var etoiles = (r >= .5 && fautes === 0) ? 3 : (r >= .2 && fautes <= 1) ? 2 : 1;
     pts = 100 + Math.round(Math.max(0, tLeft) * 10) - fautes * 20; if (pts < 50) pts = 50;
-    fin(); fl = []; gerbe = 0;   // 8 nov. : les fleurs du vase s'envolent en gerbe
+    fl.forEach(function (f) { if (f.auPanier && f.st === 1) panierFl.push(f.im); });   // la dernière fleur, encore en vol, va aussi dans le panier
+    fin(); fl = []; gerbe = -1; setTimeout(function () { versVase = 0; }, 700);   // 12 nov. : les fleurs du panier vont dans le vase, puis s'envolent en gerbe
     var ancien = etNiv[D.n - 1] || 0; if (etoiles > ancien) etNiv[D.n - 1] = etoiles; ecrire("etoiles", etNiv);
     total += pts; ecrire("points", total);
     if (D.n >= niveau) niveau = Math.min(MAXN + 1, D.n + 1); ecrire("niveau", niveau); sauveCompte();
     bip(523, .12, "triangle", .08); setTimeout(function () { bip(659, .12, "triangle", .08); }, 120); setTimeout(function () { bip(784, .2, "triangle", .08); }, 240);
     var etxt = ""; for (var i = 0; i < 3; i++) etxt += i < etoiles ? "★" : "☆";
-    setTimeout(function () { hud.hidden = true; if (D.gift) montrerFiche(D.gift, ecranGagne); else ecranGagne(); }, 5000);   // 8 nov. : on laisse le temps de voir la danse et la gerbe
+    setTimeout(function () { hud.hidden = true; if (D.gift) montrerFiche(D.gift, ecranGagne); else ecranGagne(); }, 7500);   // 8 nov. : on laisse le temps de voir la danse et la gerbe
     function ecranGagne() {
       hud.hidden = true;
       var dernier = D.n >= MAXN;
@@ -1260,19 +1292,18 @@
     var nv = n || Math.min(MAXN, niveau);
     if (!niveauOuvert(nv) && verifAchats(function () { presentation(n); })) return;
     if (!niveauOuvert(nv)) { ecranDebloquer(nv); return; }
-    n = n || Math.min(MAXN, niveau); D = defNiveau(n); gerbe = -1; manX = manBut = .54; vaseFl = []; fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
+    n = n || Math.min(MAXN, niveau); D = defNiveau(n); gerbe = -1; manX = manBut = .54; vaseFl = []; panierFl = []; versVase = -1; fl = []; enJeu = false; fondJeu(true); cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(boucle); hud.hidden = true; elChrono.hidden = true; fx.innerHTML = "";
     var noms = D.kinds.map(function (k) { return /^f(0[2-9]|1\d|20)$/.test(k) ? t("fc" + k.slice(1)) : nomKind(k, true); }).join(" / ");
     if (D.tout) noms = t("bqAll");
-    afficher('<h2>' + t("level", { n: n }) + '</h2><div class="modes"><button type="button" id="mN" class="' + (modeDur ? '' : 'on') + '">' + t("modeN") + '</button><button type="button" id="mD" class="' + (modeDur ? 'on' : '') + '">' + t("modeD") + '</button></div>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
-      '<p class="petit">' + t(modeDur ? "tipSlide" : "tipGame") + '</p>' + '<p class="petit">' + t("tipLife", { n: D.vies }) + '</p>' + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
+    afficher('<h2>' + t("level", { n: n }) + '</h2>' + bqHtml() + '<div class="nomBq">' + echap(nomBq()) + '</div><p>' + t("catch", { n: D.need, f: echap(noms) }) + '</p>' +
+ '<p class="petit">' + t("tipLife", { n: D.vies }) + '</p>' + (n >= PIQUANTES_DES ? '<p class="petit">' + t("tipThorn") + '</p>' : '') +
       '<p class="petit">' + t("secs", { t: D.time }) + '</p><p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="go" type="button">' + t("go") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
     boutonRetour();
-    [["mN", false], ["mD", true]].forEach(function (m) { var b = document.getElementById(m[0]); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); if (modeDur === m[1]) return; modeDur = m[1]; ecrire("dur", modeDur); bip(520, .06); presentation(n); }; });
     var g = document.getElementById("go"); g.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); g.onclick = function (e) { e.stopPropagation(); if (viesTotal() <= 0) { ecranSansVies(); return; } bip(660, .08); demarrer(); };
     chargerVies();
   }
   function demarrer() {
-    caught = 0; fautes = 0; prises = []; nbBrille = 0; cris = { sp: 0, got: 0, paye: false }; tFl = 0; vaseFl = []; gerbe = -1; femX = femTX = .5; femY = femTY = .93; vies = D.vies; tLeft = D.time; tAcc = D.every * .6; fini = false; pause = false; enJeu = true; fl = [];
+    caught = 0; fautes = 0; prises = []; nbBrille = 0; cris = { sp: 0, got: 0, paye: false }; tFl = 0; vaseFl = []; panierFl = []; versVase = -1; gerbe = -1; femX = femTX = .5; femY = femTY = .93; vies = D.vies; tLeft = D.time; tAcc = D.every * .6; fini = false; pause = false; enJeu = true; fl = [];
     voile.hidden = true; hud.hidden = false; elChrono.hidden = false; jeuEl.classList.remove("sur-accueil"); majHud();
     // pré-charger les images de ce niveau
     for (var pi = 1; pi <= 10; pi++) img("img/fl/" + D.col + "-" + pad(pi) + ".webp");
@@ -1290,6 +1321,7 @@
   var menuBtn = document.getElementById("menuBtn");
   menuBtn.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
   menuBtn.onclick = function (e) { e.stopPropagation(); menu(); };
+  window.IFL_DBG = { get fl() { return fl; }, get caught() { return caught; }, get D() { return D; }, posDe: function (f) { return posDe(f); }, get panier() { return panierFl.length; }, get vase() { return vaseFl.length; }, get fem() { return [femX, femY]; }, presentation: function (n) { presentation(n); }, demarrer: function () { demarrer(); } };
   phoneEl.addEventListener("pointerdown", toucher); phoneEl.addEventListener("pointermove", toucher); window.addEventListener("pointerup", function () { appui = false; });
   document.addEventListener("visibilitychange", function () { if (document.hidden && enJeu && !pause && !fini) menu(); });
 
