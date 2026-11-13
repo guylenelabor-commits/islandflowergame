@@ -853,7 +853,7 @@
       for (var i = fl.length - 1; i >= 0; i--) {
         var f = fl[i];
         // 12 nov. : les fleurs se prennent seulement avec le doigt
-        if (f.st === 0) { f.t += dt / (f.D * (typeof TV !== "undefined" && TV && TV.on ? 1.35 : 1)); f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
+        if (f.st === 0) { f.t += dt / f.D; f.rot += f.spin * dt; if (f.t >= 1) { fl.splice(i, 1); if (!f.spike && matche(f.k, D.kinds)) rate(posDe({ t: .98, x0: f.x0, x1: f.x1, y0: f.y0, y1: f.y1, rot: f.rot })); } }
         else { f.ct += dt / (f.auPanier ? .7 : f.ok ? 1.1 : .6); if (f.ct >= 1) { fl.splice(i, 1); if (f.auPanier) panierFl.push(f.im); } }
       }
       elBarre.style.transform = "scaleX(" + Math.max(0, tLeft / D.time) + ")"; elChrono.classList.toggle("bas", tLeft / D.time < .25);
@@ -983,7 +983,8 @@
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
   function rate(p) {
-    if (fini || !enJeu) return; /* fleur ratée : aucune pénalité */
+    if (fini || !enJeu) return; /* fleur ratée : aucune pénalité sur le téléphone */
+    if (typeof TV !== "undefined" && TV && TV.on) perdu("rate");   // sur la télé : une bonne fleur ratée qui tombe, on perd le niveau
   }
   function piquer(p, pique) {
     hurtF = 1; fauteMusique();
@@ -1292,7 +1293,7 @@
     if (fini) return; creditCristal(); fin(); bip(220, .4, "sawtooth", .07, 90); if (raison !== "vies") depenserVie();
     setTimeout(function () {
       hud.hidden = true;
-      afficher('<h2>' + (raison === "vies" ? t("noHearts") : t("timeUpB", { a: caught, b: D.need })) + '</h2>' + bqHtml("opacity:.55") + '<p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
+      afficher('<h2>' + (raison === "vies" ? t("noHearts") : raison === "rate" ? (lang === "fr" ? "Une fleur est tombée !" : "A flower fell!") : t("timeUpB", { a: caught, b: D.need })) + '</h2>' + bqHtml("opacity:.55") + '<p class="petit" id="vp">' + t("vLeft", { n: viesTotal() }) + '</p><button class="gros-bouton" id="rej" type="button">' + t("retry") + '</button><button class="slien" id="ret" type="button">' + t("home") + '</button>');
       var b = document.getElementById("rej"); b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); if (viesTotal() <= 0) ecranSansVies(); else presentation(D.n); };
       boutonRetour();
     }, 450);
@@ -1453,7 +1454,7 @@
   function feteManche(F, pl) {
     pl = pl || F.cols.map(function (c) { return c.k; }); var n = pl.length; F.manche++; F.t0 = performance.now(); F.fini = 0; F.fl = []; F.go = 3; F.finPartie = false;
     F.cible = 10 + 2 * (F.manche - 1);   // le nombre de fleurs à réunir pour gagner la manche : 10, puis 2 de plus à chaque manche
-    F.cols = pl.map(function (k, i) { var j = TV.J[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0); j.score = 0; j.faux = 0; } return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 5, tous: 1.6, lance: 0, panier: [], pb: null }; });
+    F.cols = pl.map(function (k, i) { var j = TV.J[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0); j.score = 0; j.faux = 0; } return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 3.6, tous: 1.6, lance: 0, panier: [], pb: null }; });
   }
   window.IFL_DBG.ffm = function (k) { feteFinManche(TV.fete, k, performance.now()); };
   function feteFinManche(F, k, now) {
@@ -1479,7 +1480,7 @@
     if (best.k !== k) { bip(1400, .07, "sine", .05); j.faux = (j.faux || 0) + 1; if (j.faux >= 3) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } return; }   // pas sa fleur : un petit « ping » ; à la 3e, il perd la manche
     best.pris = true; best.pt = 0; best.px = best.x; best.py = best.y; j.score++; chime(j.score % 8 + 1);
     if (j.score >= F.cible) feteFinManche(F, k, performance.now());   // le premier qui a réuni ses fleurs gagne la manche
-    var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.6, c.D - .1); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
+    var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.1, c.D - .08); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
   }
   function feteBoucle(now) {
     var F = TV.fete; if (!F) return; requestAnimationFrame(feteBoucle);
