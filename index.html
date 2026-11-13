@@ -58,6 +58,11 @@
   .voile.acc .install { position: absolute; left: -12cqw; right: -12cqw; bottom: -17cqw; margin: 0 auto; width: max-content; max-width: 84cqw; border: 0; border-radius: 99px; background: #ffd23c; color: #5a3600; font: inherit; font-size: 3.5cqw; font-weight: 800; padding: 1.4cqw 3.4cqw; box-shadow: 0 .8cqw 0 #c79a00; line-height: 1.2; }
   .voile.acc .install .ico { width: 1.3em; height: 1.3em; }
   .voile.acc .carte { gap: 2.2cqw; }
+  body.large.accL .voile.acc .install { position: fixed; top: auto; bottom: 1.2cqw; }
+  .voile.acc .teleP { display: flex; flex-direction: column; align-items: center; margin: .6cqw auto 0; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; }
+  .voile.acc .teleP .ecr { display: block; width: 52cqw; padding: 1.5cqw 2.4cqw; border: 1.2cqw solid #3a2440; border-radius: 3cqw; background: linear-gradient(135deg, #2a8fd6, #6b3fa0); color: #fff; font-weight: 900; font-size: 3.6cqw; line-height: 1.25; text-align: center; box-shadow: 0 1cqw 2.4cqw rgba(90,20,60,.35), inset 0 0 3cqw rgba(255,255,255,.18); }
+  .voile.acc .teleP .ecr small { display: block; margin-top: .8cqw; font-weight: 700; font-size: 2.9cqw; opacity: .95; }
+  .voile.acc .teleP .pied { display: block; width: 14cqw; height: 2cqw; margin-top: -.2cqw; border-radius: 0 0 2cqw 2cqw; background: #3a2440; }
   .rang2 { display: flex; gap: 2cqw; }
   .rang2 .second { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 1cqw; padding-right: 1cqw; }
   .listelangues { display: flex; flex-direction: column; gap: 1.6cqw; max-height: 78cqw; overflow-y: auto; margin: 2cqw 0; }
@@ -568,11 +573,13 @@
       '<button class="second" id="moncompte" type="button"' + (session ? ' style="display:none"' : '') + '>' + icone("moi") + (session ? echap(pseudo) : t("login")) + '</button>' +
       '<div class="rang2"><button class="second" id="malangue" type="button">' + icone("terre") + echap(cur) + '</button><button class="second" id="mesamis" type="button">' + icone("amis") + t("friends") + '</button></div>' +
       '<button class="second" id="monmenu" type="button">' + t("menu") + '</button><button class="second" id="mesfiches" type="button">📜 ' + t("fiches") + '</button><div class="infos"><span id="vp">' + t("vLeft", { n: viesTotal() }) + '</span> · ' + t("level", { n: niveau }) + ' · ' + t("pts", { n: total.toLocaleString(lang) }) + ' · ★ ' + etTotal() + '</div>' +
+      '<button class="teleP" id="telePub" type="button"><span class="ecr">' + (lang === "fr" ? "Joue en grand sur la télé !<small>Ton téléphone devient la manette : scanne le QR code</small>" : "Play big on the TV!<small>Your phone becomes the controller: scan the QR code</small>") + '</span><span class="pied"></span></button>' +
       (dejaInstalle() ? '' : '<button class="install" id="installer" type="button">' + icone("tel") + ((lang === "fr" && !/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) ? "Installer sur mon ordinateur" : t("install")) + '</button>'), true);
     voile.insertAdjacentHTML("afterbegin", "<h1 class=\"titre\" aria-label=\"Island Flower Game\"><svg viewBox=\"0 0 300 140\" aria-hidden=\"true\"><defs><linearGradient id=\"gd\" x1=\"0\" x2=\"1\"><stop offset=\"0\" stop-color=\"#ffc400\"/><stop offset=\".5\" stop-color=\"#ff5fae\"/><stop offset=\"1\" stop-color=\"#ffc400\"/></linearGradient><path id=\"arc\" d=\"M 46 134 A 104 104 0 0 1 254 134\"/></defs><text font-size=\"30\" font-weight=\"800\" text-anchor=\"middle\" fill=\"url(#gd)\" stroke=\"#7a2a4a\" stroke-width=\"2\" paint-order=\"stroke\" letter-spacing=\"1\"><textPath href=\"#arc\" startOffset=\"50%\">Island Flower Game</textPath></text></svg></h1>");
     var bi = document.getElementById("installer");
     if (bi) { bi.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); bi.onclick = function (e) { e.stopPropagation(); installer(); }; }
     document.getElementById("jouer").onclick = function (e) { e.stopPropagation(); bip(520, .08); presentation(); };
+    var tp = document.getElementById("telePub"); tp.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); tp.onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranTele(); };   // 12 nov. : la petite télé : on peut jouer en grand sur la télé
     document.getElementById("moncompte").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranCompte("connexion"); };
     document.getElementById("malangue").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranLangue(); };
     document.getElementById("monmenu").onclick = function (e) { e.stopPropagation(); bip(520, .08); ecranMenu(); };
