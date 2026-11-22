@@ -21,9 +21,6 @@
   #tvLobby .tvP.pris { background: #f1ffe9; }
   #tvLobby .tvQ svg { width: 112px; height: 112px; display: block; margin: 4px auto; }
   #tvLobby .tvEnvT { margin-top: 8px; }
-  #tvLobby .tvEnvs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
-  #tvLobby .tvEnvs button { width: 54px; height: 38px; border-radius: 8px; border: 3px solid transparent; background-size: cover; background-position: center; cursor: pointer; padding: 0; }
-  #tvLobby .tvEnvs button.ici { border-color: #2faa3a; box-shadow: 0 0 0 2px #fff, 0 0 10px #2faa3a; }
   #tvLobby .tvNb, .salNb { display: flex; gap: 6px; justify-content: center; margin: 4px 0 8px; }
   #tvLobby .tvNb button, .salNb button { min-width: 46px; padding: 5px 10px; border-radius: 8px; border: 2px solid rgba(0,0,0,.15); background: #fff; color: #333; font-weight: 800; cursor: pointer; }
   #tvLobby .tvNb button.ici, .salNb button.ici { border-color: #2faa3a; box-shadow: 0 0 0 2px #fff, 0 0 10px #2faa3a; }
@@ -33,9 +30,6 @@
   #fete { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 8000; touch-action: none; }
   #feteX { position: fixed; top: 10px; right: 12px; z-index: 8100; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255,255,255,.9); color: #b0306a; font: 900 26px/40px Nunito, system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
   #feteX[hidden] { display: none; }
-  .salEnvs { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin: 4px 0 8px; }
-  .salEnvs button { width: 15cqw; height: 10cqw; border-radius: 2cqw; border: 1cqw solid transparent; background-size: cover; background-position: center; padding: 0; cursor: pointer; }
-  .salEnvs button.ici { border-color: #2faa3a; }
   #fete[hidden] { display: none; }
   body.modeMan #phone, body.modeMan #fond { display: none !important; }
   #manette { position: fixed; inset: 0; z-index: 9500; display: flex; flex-direction: column; gap: 12px; padding: 18px 16px 22px; box-sizing: border-box; background: linear-gradient(#f7d6e4, #e9a8c4 55%, #b9658e); font-family: Nunito, system-ui, sans-serif; color: #fff; }
@@ -1435,13 +1429,11 @@
     var fr = lang === "fr", L = document.getElementById("tvLobby");
     if (!L) { L = document.createElement("div"); L.id = "tvLobby"; document.body.appendChild(L);
       L.innerHTML = '<button type="button" class="tvX" id="tvX" aria-label="Fermer">×</button><div class="tvPl">' + [0, 1, 2].map(function (k) { return '<div class="tvP" id="tvP' + k + '" style="border-color:' + COULJ[k] + '"><b>' + NOMP[fr ? "fr" : "en"][k] + '</b><div class="tvQ" id="tvQ' + k + '"></div><span id="tvN' + k + '"></span></div>'; }).join("") + '</div>' +
-        '<div class="tvEnvT">' + (fr ? "Environnement de la partie à plusieurs :" : "Scenery for the multiplayer game:") + '</div><div class="tvEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '" style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div><div class="tvEnvT">' + (fr ? "Nombre de manches :" : "Number of rounds:") + '</div><div class="tvNb">' + [5, 10, 15].map(function (v) { return '<button type="button" data-nb="' + v + '">' + v + '</button>'; }).join("") + '</div><div class="tvT" id="tvT"></div>';
+        '<div class="tvEnvT">' + (fr ? "Nombre de manches :" : "Number of rounds:") + '</div><div class="tvNb">' + [5, 10, 15].map(function (v) { return '<button type="button" data-nb="' + v + '">' + v + '</button>'; }).join("") + '</div><div class="tvT" id="tvT"></div>';
       [0, 1, 2].forEach(function (k) { qrDans(document.getElementById("tvQ" + k), location.origin + "/?manette=" + TV.code + "&place=" + k); });
       document.getElementById("tvX").onclick = function (e) { e.stopPropagation(); location.href = "/"; };
-      L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); TV.env = +b.dataset.e; tvLobby(); }; });
       L.querySelectorAll(".tvNb button").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); TV.nb = +b.dataset.nb; tvLobby(); }; }); }
     var n = TV.J.filter(Boolean).length;
-    L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.classList.toggle("ici", +b.dataset.e === TV.env); });
     L.querySelectorAll(".tvNb button").forEach(function (b) { b.classList.toggle("ici", +b.dataset.nb === TV.nb); });
     [0, 1, 2].forEach(function (k) { var j = TV.J[k]; document.getElementById("tvN" + k).textContent = j ? j.pseudo + " · " + (fr ? "fleurs " : "") + FLJN[fr ? "fr" : "en"][k] + (fr ? "" : " flowers") : (fr ? "libre" : "free"); document.getElementById("tvP" + k).classList.toggle("pris", !!j); });
     document.getElementById("tvT").textContent = n === 0 ? (fr ? "Scanne le code de ta place avec ton téléphone" : "Scan your place's code with your phone") : n === 1 ? (fr ? "Seul : touche « Jouer » sur ton téléphone. À 2 ou 3 : les autres scannent leur code." : "Alone: tap “Play” on your phone. 2 or 3 players: the others scan their code.") : (fr ? "Partie à " + n + " : touchez « Jouer » sur un téléphone" : n + " players: tap “Play” on a phone");
@@ -1553,8 +1545,7 @@
     var pl = SAL.J.map(function (j, k) { return '<div class="frow' + (k === SAL.moi ? ' moi' : '') + '"><span>' + (j ? echap(j.pseudo) + (k === SAL.moi ? ' (' + t("you") + ')' : '') : (fr ? "place libre" : "free place")) + '</span><b style="color:' + COULJ[k] + ';text-shadow:0 1px 0 rgba(0,0,0,.4)">' + (fr ? "fleurs " : "") + FN[k] + '</b></div>'; }).join("");
     afficher('<h2>' + (fr ? "Jouer à distance" : "Play remotely") + '</h2><p class="petit">' + (fr ? "Code de la partie" : "Game code") + '</p><div class="scode"><b>' + SAL.code + '</b><button class="mini" id="salP" type="button">' + t("share") + '</button></div>' +
       '<div class="classement" id="salJ">' + pl + '</div>' +
-      (SAL.hote ? '<p class="petit">' + (fr ? "Environnement" : "Scenery") + '</p><div class="salEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '"' + (SAL.env === i ? ' class="ici"' : '') + ' style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div>' +
-        '<p class="petit">' + (fr ? "Nombre de manches" : "Number of rounds") + '</p><div class="salNb">' + [5, 10, 15].map(function (v) { return '<button type="button" data-nb="' + v + '"' + (SAL.nb === v ? ' class="ici"' : '') + '>' + v + '</button>'; }).join("") + '</div>' +
+      (SAL.hote ? '<p class="petit">' + (fr ? "Nombre de manches" : "Number of rounds") + '</p><div class="salNb">' + [5, 10, 15].map(function (v) { return '<button type="button" data-nb="' + v + '"' + (SAL.nb === v ? ' class="ici"' : '') + '>' + v + '</button>'; }).join("") + '</div>' +
         '<button class="gros-bouton" id="salGo" type="button"' + (n < 2 ? ' disabled style="opacity:.5"' : '') + '>' + (fr ? "Commencer" : "Start") + '</button>'
         : '<p class="petit">' + (SAL.moi >= 0 ? (fr ? "En attente du créateur de la partie…" : "Waiting for the host…") : (fr ? "Connexion à la partie…" : "Joining the game…")) + '</p>') +
       '<button class="slien" id="ret" type="button">' + (fr ? "Quitter la partie" : "Leave the game") + '</button>');
@@ -1563,7 +1554,6 @@
     sp.onclick = function (e) { e.stopPropagation(); var txt = (fr ? "Viens jouer avec moi sur Island Flower Game ! Code : " : "Come play with me on Island Flower Game! Code: ") + SAL.code;
       if (navigator.share) { navigator.share({ text: txt, url: lien }).catch(function () {}); return; }
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt + " " + lien).then(function () { sp.textContent = t("copied"); }, function () {}); };
-    document.querySelectorAll(".salEnvs button").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); SAL.env = +b.dataset.e; salPartage(); ecranSalon(); }; });
     document.querySelectorAll(".salNb button").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); SAL.nb = +b.dataset.nb; ecranSalon(); }; });
     var go = document.getElementById("salGo");
     if (go) { go.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); go.onclick = function (e) { e.stopPropagation(); if (SAL.J.filter(Boolean).length < 2) return;
@@ -1575,7 +1565,7 @@
       cvF.addEventListener("pointerdown", function (e) { e.preventDefault(); if (SAL.on && SAL.moi >= 0) feteClic(SAL.moi, e.clientX, e.clientY); });   // à distance : on touche ses fleurs avec le doigt
       var fx = document.createElement("button"); fx.id = "feteX"; fx.type = "button"; fx.textContent = "×"; fx.hidden = true; document.body.appendChild(fx);
       fx.onclick = function (e) { e.stopPropagation(); salQuitter(); ecranSalon(); }; }
-    FETE_FOND = img(ENVS[SAL.on ? SAL.env : TV.env] || ENVS[0]);
+    FETE_FOND = img(ENVS[decorDuMois()] || ENVS[0]);   // 21 nov. 2026 : à plusieurs aussi, le décor du mois (ce n'est pas le décor qui fait la partie)
     cvF.hidden = false; if (TV.on) tvLobbyVu(false); enJeu = false; voile.hidden = true; document.getElementById("feteX").hidden = !SAL.on;
     var F = TV.fete = { cv: cvF, g: cvF.getContext("2d"), dern: performance.now(), manche: 0, NB: SAL.on ? SAL.nb : TV.nb, vict: {}, cols: [], joueurs: pl };
     pl.forEach(function (k) { F.vict[k] = 0; if (JJ()[k]) JJ()[k].total = 0; });
