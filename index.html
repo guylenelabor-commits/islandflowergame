@@ -703,7 +703,7 @@
     var bonusT = 1 + .2 * (n >= 200 ? 3 : n >= 100 ? 2 : 1);   // le temps rendu par les fleurs du temps est compté : sans elles, on n'a pas assez de temps
     d.time = Math.round(d.need * (2.2 - .9 * Math.min(1, (n - 1) / 999)) / bonusT);
     d.every = .9;
-    d.chute = Math.max(1.3, 3.2 - n * 0.0065);
+    d.chute = Math.max(1, 2.8 - n * 0.008);   // 21 nov. 2026 (soir) : plus vite quand les niveaux montent
     d.pT = Math.max(.3, .5 - n * .0007);
     d.pSpike = n >= PIQUANTES_DES ? Math.min(.35, .14 + (n - PIQUANTES_DES) * .0015) : 0;
     d.every = Math.min(d.every, d.time * bonusT / (d.need * 2.5)); var offre = 1.3 + .15 * Math.max(0, 1 - (n - 1) / 49); d.pT = Math.min(.85, Math.max(.2, d.need * offre * d.every / (d.time * bonusT) / (1 - d.pSpike)));   // 8 nov. : à peine plus de bonnes fleurs que ce qu'il faut attraper
@@ -785,12 +785,12 @@
   function dessinePerso(dt) {
     tPerso += dt; kickM = Math.max(0, kickM - dt * 3); kickF = Math.max(0, kickF - dt * 2.6); hurtF = Math.max(0, hurtF - dt * 3);
     var ax = femX, ay = femY;   // 8 nov. : c'est le joueur qui la fait courir (droite, gauche, vers le fond, vers l'avant)
-    if (enJeu && !fini && !pause) { femX = .5; femY = .93; }   // 12 nov. : elle ne court plus : elle reste en bas avec son panier
+    if (enJeu && !fini && !pause) { femY = .93; femX += Math.max(-dt * 1.4, Math.min(dt * 1.4, femTX - femX)); }   // 21 nov. 2026 (soir) : elle court sous la fleur qu'on attrape
     else if (gerbe >= 0) { femY += Math.max(-dt * .5, Math.min(dt * .5, .95 - femY)); femX += Math.max(-dt * .5, Math.min(dt * .5, .5 - femX)); }   // 8 nov. : elle danse au sol, loin du vase   // 8 nov. : pour danser, elle revient devant, sur le sol
     femV = dt > 0 ? (femX - ax) / dt * W : 0; var femVY = dt > 0 ? (femY - ay) / dt : 0; if (Math.abs(femX - ax) > 1e-4) femDir = femX < ax ? -1 : 1;
     var bouge = Math.abs(femV) > PW * .05 || Math.abs(femVY) > .05;
     var mav = manX; if (gerbe >= 0 && LARGE) manX += Math.max(-dt * .6, Math.min(dt * .6, -.75 - manX));   // ordinateur : il va danser sur le côté, pas derrière la carte
-    if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .44 + Math.random() * .12;   /* 21 nov. 2026 : il reste au-dessus de la jardinière (au milieu), comme dans la partie à plusieurs */ manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
+    if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .14 + Math.random() * .6;   /* 21 nov. 2026 (soir) : il va à gauche, au milieu ou à droite : les fleurs tombent tout droit sous lui */ manX += Math.max(-dt * .45, Math.min(dt * .45, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
     var MI = MANS[kickM > .5 ? (manDir < 0 ? 4 : 2) : Math.abs(manV) > .05 ? (manV < 0 ? 0 : 1) : 3], MD = gerbe >= 0 ? MAND[Math.floor(gerbe * 2.5) % MAND.length] : null; if (MD && MD.complete && MD.naturalWidth) MI = MD; else MD = null;   // 8 nov. : il danse aussi quand le bouquet est complet
     if (MI && MI.complete && MI.naturalWidth) {
       var mhh = (by(349) - by(106)) * .78 * (MD ? MI.naturalHeight / 473 : 1),   /* 8 nov. : jardinier plus petit */ mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
@@ -856,9 +856,9 @@
     else { k = pick(kindsAutres(D)); src = imageDe(k, D.thorn); }
     var im = img(src), brille = false;   // 8 nov. : plus de halo doré : les bonnes fleurs ont un contour vert
     var n = D.n, der = .16 + Math.min(.34, n * .0013), va = .3 + Math.min(.5, n * .002);
-    var sx = manX, x1 = Math.max(.1, Math.min(.9, sx + (Math.random() - .5) * der)); kickM = 1; manDir = x1 < sx ? -1 : 1; fl.push({ k: k, im: im, bon: !spike && matche(k, D.kinds), spike: spike, brille: brille, wob: .012 + Math.min(.035, n * .00013), x0: sx, y0: .25, x1: x1, y1: .95, t: 0, D: D.chute * (1 - va / 2 + Math.random() * va), rot: (Math.random() - .5) * .8, spin: (Math.random() - .5) * 1.6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .2 + Math.random() * .02 }); atterrir(fl[fl.length - 1]);
+    var sx = manX, x1 = sx; kickM = 1; manDir = manV < 0 ? -1 : 1; fl.push({ k: k, im: im, bon: !spike && matche(k, D.kinds), spike: spike, brille: brille, wob: .012 + Math.min(.035, n * .00013), x0: sx, y0: .25, x1: x1, y1: .95, t: 0, D: D.chute * (1 - va / 2 + Math.random() * va), rot: (Math.random() - .5) * .8, spin: (Math.random() - .5) * 1.6, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .2 + Math.random() * .02 }); atterrir(fl[fl.length - 1]);
     // à partir du niveau 40 : parfois une autre fleur (mauvaise) tombe en même temps
-    if (!leurre && n >= 40 && Math.random() < Math.min(.35, (n - 40) * .0025)) spawn(true);
+    if (!leurre && Math.random() < Math.min(.6, .1 + n * .004)) spawn(true);   // 21 nov. 2026 (soir) : de plus en plus de mauvaises fleurs mélangées aux bonnes
   }
   var NCR = 60;
   function spawnCristal() {
@@ -875,7 +875,8 @@
     else { var v = viesInvite(); v.daily += g; ecrire("viesJ", v); viesJ = { daily: v.daily, bonus: 0 }; majVieTxt(); }
   }
   function atterrir(f) {   // 8 nov. : la fleur tombe à un endroit de l'allée (devant ou au fond) : elle arrive à hauteur du panier
-    f.x1 = (OX + PW * (.5 + (Math.random() - .5) * .18)) / W;   // 21 nov. 2026 : comme à plusieurs : la fleur tombe presque tout droit, dans la zone de la jardinière, au milieu   // ordinateur : les fleurs tombent sur toute la largeur f.fy = FY0 + Math.random() * (FY1 - FY0); f.ech = femEch(f.fy); f.y1 = (f.fy * H - femHaut(f.fy) * .36) / H;
+    f.x1 = (OX + PW * Math.max(.08, Math.min(.8, f.x0 + (Math.random() - .5) * .06))) / W;   // 21 nov. 2026 (soir) : la fleur tombe tout droit, sous le jardinier, là où il est
+    //   // 21 nov. 2026 : comme à plusieurs : la fleur tombe presque tout droit, dans la zone de la jardinière, au milieu   // ordinateur : les fleurs tombent sur toute la largeur f.fy = FY0 + Math.random() * (FY1 - FY0); f.ech = femEch(f.fy); f.y1 = (f.fy * H - femHaut(f.fy) * .36) / H;
   }
   function posDe(f) {
     var u = Math.min(1, f.t), ex = 1 - (1 - u) * (1 - u), ey = Math.pow(u, 1.3);
@@ -1010,7 +1011,7 @@
       if (Math.abs(X - q.x) <= Math.max(w, h * .6) * .7 + m && Math.abs(Y - q.y) <= h * .7 + m) { attraper(f, q); return; } }
   }
   function attraper(f, p) {
-    f.st = 1; f.ct = 0; f.cx = p.x; f.cy = p.y;
+    f.st = 1; f.ct = 0; f.cx = p.x; f.cy = p.y; femTX = Math.max(.08, Math.min(.92, p.x / W));
     if (f.tm) { f.ok = true; kickF = 1; tLeft = Math.min(D.time, tLeft + D.time * .2); chime(4); bulle("+⏱", "oui", p.x, p.y); return; }
     if (f.cr) { f.ok = true; cris.got++; kickF = 1; chime(cris.got + 2); bulle("+1 ❤️", "oui", p.x, p.y); return; }
     if (f.spike) { f.ok = false; piquer(p, true); return; }
@@ -1020,11 +1021,12 @@
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
   function rate(p) {
-    if (fini || !enJeu) return; /* fleur ratée : aucune pénalité sur le téléphone */
+    if (fini || !enJeu) return;
+    if (!(typeof TV !== "undefined" && TV && TV.on)) { tLeft -= 2; bulle("-⏱", "non", p.x, p.y); if (tLeft <= 0) perdu("time"); return; }   // 21 nov. 2026 (soir) : une bonne fleur qui tombe par terre coûte 2 secondes
     if (typeof TV !== "undefined" && TV && TV.on) perdu("rate");   // sur la télé : une bonne fleur ratée qui tombe, on perd le niveau
   }
   function piquer(p, pique) {
-    hurtF = 1; fauteMusique();
+    hurtF = 1; fauteMusique(); if (D.n < 200) { tLeft -= 2; if (tLeft <= 0) { perdu("time"); return; } }   // 21 nov. 2026 (soir) : avant le niveau 200, une mauvaise fleur coûte 2 secondes
     bip(190, .22, "sawtooth", .07, 110);
     if (D.vies) { vies--; majHud(); bulle(pique ? t("ouch") : t("wrong"), "non", p.x, p.y); if (vies <= 0) { perdu("vies"); } }
     else { bulle(pique ? t("ouch") : t("wrong"), "non", p.x, p.y); }
