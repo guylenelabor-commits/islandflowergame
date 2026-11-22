@@ -744,8 +744,11 @@
   var MAN = { x: .53, y: .265 }, FEM = { x: .46, y: .80 };
   // ---------- personnages animés ----------
   var MAN_DY = 105, persoMan = img("img/man.webp"), persoFem = img("img/fem.webp"), FEMS = [1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return img("img/fem" + i + ".webp"); }), femV = 0, MANS = [1, 2, 3, 4, 5, 6].map(function (i) { return img("img/man" + i + ".webp"); }), manX = .54, manBut = .54, manV = 0, manDir = 1, kickM = 0, kickF = 0, hurtF = 0, femDx = 0, tPerso = 0, FEM_ECH = .78;
-  // 9 décors : un nouveau tous les 30 niveaux (1–30 : le marché d'origine), puis on recommence
-  function theme() { var k = D ? Math.floor((D.n - 1) / 30) % 10 : 0; return k ? "img/th" + pad(k) + ".webp" : ""; }
+  // 21 nov. 2026 : le décor suit le calendrier (le thème du moment de l'année), plus le niveau
+  // 0 marché d'été, 1 ferme et récoltes, 2 Halloween, 3 Pâques, 4 montagne enneigée, 5 marché de Noël, 6 plage, 7 forêt, 8 printemps fleuri, 9 village sous la neige
+  var DECOR_MOIS = [4, 9, 8, 3, 7, 0, 6, 6, 1, 2, 5, 5];   // janvier → décembre
+  function decorDuMois() { return DECOR_MOIS[new Date().getMonth()]; }
+  function theme() { var k = D ? decorDuMois() : 0; return k ? "img/th" + pad(k) + ".webp" : ""; }
   // 12 nov. : ordinateur, écran d'accueil : quelques fleurs bombées autour du jardinier et de la jardinière
   var ACC_FL = [["rose", 2], ["jaune", 5], ["rouge", 1], ["lilas", 3], ["orange", 7], ["bleu", 4], ["corail", 6], ["blanc", 2], ["violet", 8], ["peche", 3], ["turquoise", 5], ["lavande", 9], ["rouge", 6], ["jaune", 9], ["rose", 7], ["ambre", 4]].map(function (q) { return img("img/fl/" + q[0] + "-" + pad(q[1]) + ".webp"); }), accFlT = 0;
   function accFleurs(essai) {
@@ -786,11 +789,11 @@
     tPerso += dt; kickM = Math.max(0, kickM - dt * 3); kickF = Math.max(0, kickF - dt * 2.6); hurtF = Math.max(0, hurtF - dt * 3);
     var ax = femX, ay = femY;   // 8 nov. : c'est le joueur qui la fait courir (droite, gauche, vers le fond, vers l'avant)
     if (enJeu && !fini && !pause) { femX = .5; femY = .93; }   // 12 nov. : elle ne court plus : elle reste en bas avec son panier
-    else if (gerbe >= 0) { femY += Math.max(-dt * .5, Math.min(dt * .5, .95 - femY)); femX += Math.max(-dt * .5, Math.min(dt * .5, (LARGE ? .62 : .58) - femX)); }   // 8 nov. : elle danse au sol, loin du vase   // 8 nov. : pour danser, elle revient devant, sur le sol
+    else if (gerbe >= 0) { femY += Math.max(-dt * .5, Math.min(dt * .5, .95 - femY)); femX += Math.max(-dt * .5, Math.min(dt * .5, .5 - femX)); }   // 8 nov. : elle danse au sol, loin du vase   // 8 nov. : pour danser, elle revient devant, sur le sol
     femV = dt > 0 ? (femX - ax) / dt * W : 0; var femVY = dt > 0 ? (femY - ay) / dt : 0; if (Math.abs(femX - ax) > 1e-4) femDir = femX < ax ? -1 : 1;
     var bouge = Math.abs(femV) > PW * .05 || Math.abs(femVY) > .05;
     var mav = manX; if (gerbe >= 0 && LARGE) manX += Math.max(-dt * .6, Math.min(dt * .6, -.75 - manX));   // ordinateur : il va danser sur le côté, pas derrière la carte
-    if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .14 + Math.random() * .72; manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
+    if (enJeu && !fini && !pause) { if (Math.abs(manBut - manX) < .01) manBut = .44 + Math.random() * .12;   /* 21 nov. 2026 : il reste au-dessus de la jardinière (au milieu), comme dans la partie à plusieurs */ manX += Math.max(-dt * .32, Math.min(dt * .32, manBut - manX)); } manV = dt > 0 ? (manX - mav) / dt : 0;   // 8 nov. : le jardinier marche là où il lance la fleur
     var MI = MANS[kickM > .5 ? (manDir < 0 ? 4 : 2) : Math.abs(manV) > .05 ? (manV < 0 ? 0 : 1) : 3], MD = gerbe >= 0 ? MAND[Math.floor(gerbe * 2.5) % MAND.length] : null; if (MD && MD.complete && MD.naturalWidth) MI = MD; else MD = null;   // 8 nov. : il danse aussi quand le bouquet est complet
     if (MI && MI.complete && MI.naturalWidth) {
       var mhh = (by(349) - by(106)) * .78 * (MD ? MI.naturalHeight / 473 : 1),   /* 8 nov. : jardinier plus petit */ mww = mhh * MI.naturalWidth / MI.naturalHeight, mbob = Math.abs(manV) > .05 ? Math.abs(Math.sin(tPerso * 11)) * H * .006 : 0;
@@ -817,7 +820,7 @@
   var femBouge = false, FEMP = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (i) { return img("img/femp" + i + ".webp"); });
   function panier() { var h = femHaut(femY), bg = femBouge || kickF > .3; return { x: femX * W + (bg ? femDir * h * .27 : 0), y: femY * H - h * (bg ? .58 : .45), w: h * .37 }; }   /* 8 nov. : le panier est dans ses mains (selon la pose) */
   function choisirVase() { var v = D ? VASES[Math.floor((D.n - 1) / 10) % 50] : null; VASE = v && v.complete && v.naturalWidth ? v : VASE0; }   // 8 nov. : un vase différent tous les 10 niveaux (50 vases, puis on recommence)
-  function vasePos() { var h = H * .2, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: LARGE ? OX * .55 : W * .12, b: H * .99, h: h, w: w }; }
+  function vasePos() { var h = H * .13, w = VASE.naturalWidth ? h * VASE.naturalWidth / VASE.naturalHeight : h * .58; return { x: OX + PW * .86, b: by(106 + MAN_DY) + (by(349) - by(106)), h: h, w: w }; }   // 21 nov. 2026 : le vase est en haut, à côté du jardinier (plus en bas, à côté de la jardinière)
   var panierFl = [], versVase = -1;
   function dessinePanierFl(dt) {   // 12 nov. : les fleurs attrapées dépassent du panier ; à la fin du niveau, elles volent jusqu'au vase
     var pb = panier(), n = Math.min(panierFl.length, 14), vp = vasePos();
@@ -833,9 +836,9 @@
     if (gerbe >= 0) gerbe += dt;
     for (var k = 0; k < n; k++) {
       var im = vaseFl[vaseFl.length - n + k]; if (!im.naturalWidth) continue;
-      var ang = n > 1 ? -.55 + 1.1 * k / (n - 1) : 0, fh = H * .13, fw = fh * im.naturalWidth / im.naturalHeight, x = px, y = py, r = ang;
-      if (gerbe >= 0) { var g = Math.min(gerbe, 4.6), vx = Math.sin(ang * 1.6) * W * .22, vy = H * (.5 + .1 * Math.cos(k * 2.1)); x += vx * g + Math.sin(g * 2 + k) * W * .03; y += -vy * g + H * .1 * g * g; r = ang + g * (k % 2 ? 1.5 : -1.5); }
-      ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.drawImage(im, -fw / 2, -fh, fw, fh); ctx.restore();
+      var ang = n > 1 ? -.55 + 1.1 * k / (n - 1) : 0, fh = H * .085, fw = fh * im.naturalWidth / im.naturalHeight, x = px, y = py, r = ang;
+      if (gerbe >= 0) { var u2 = Math.min(1, gerbe / 1.8), e2 = 1 - Math.pow(1 - u2, 2), tx = femX * W + Math.sin(k * 2.3) * femHaut(femY) * .35, ty = femY * H - femHaut(femY) * (.35 + .25 * ((k * 7) % 5) / 5); x += (tx - x) * e2; y += (ty - y) * e2 - Math.sin(e2 * 3.1416) * H * .16; r = ang + e2 * (k % 2 ? 4 : -4); if (gerbe > 3.2) { ctx.globalAlpha = Math.max(0, 1 - (gerbe - 3.2) / 1.4); } }   // 21 nov. 2026 : elles jaillissent du vase (en haut) et retombent sur la jardinière
+      ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.drawImage(im, -fw / 2, -fh, fw, fh); ctx.restore(); ctx.globalAlpha = 1;
     }
     ctx.save(); ctx.globalAlpha = .82; ctx.drawImage(VASE, v.x - v.w / 2, top, v.w, v.h); ctx.restore();
     if (gerbe >= 0 && gerbe < 4.6) for (var q = 0; q < 26; q++) { var a2 = q * 2.4, rr = Math.min(gerbe, 1.5) * W * (.25 + .5 * ((q * 37) % 10) / 10); ctx.globalAlpha = Math.max(0, 1 - gerbe / 4.6); ctx.fillStyle = ["#ffd6e8", "#fff3b0", "#ffffff", "#c8f7d0"][q % 4]; ctx.beginPath(); ctx.arc(px + Math.cos(a2) * rr, top - Math.min(gerbe, 1.5) * H * .25 + Math.max(0, gerbe - 1.5) * H * .07 + Math.sin(a2) * rr * .6, W * .012, 0, 6.2832); ctx.fill(); }
@@ -862,8 +865,8 @@
   }
   var NCR = 60;
   function spawnCristal() {
-    cris.sp++; var sx = .15 + Math.random() * .7, n = D.n;
-    fl.push({ k: "cristal", cr: true, im: img("img/nouv/n" + pad(1 + Math.floor(Math.random() * NCR)) + ".webp"), spike: false, brille: true, wob: .02, x0: sx, y0: -.08, x1: Math.max(.12, Math.min(.88, sx + (Math.random() - .5) * .3)), y1: .95, t: 0, D: D.chute * 1.25, rot: (Math.random() - .5) * .5, spin: (Math.random() - .5) * 1, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .3 });
+    cris.sp++; var sx = .44 + Math.random() * .12, n = D.n;
+    fl.push({ k: "cristal", cr: true, im: img("img/nouv/n" + pad(1 + Math.floor(Math.random() * NCR)) + ".webp"), spike: false, brille: true, wob: .02, x0: sx, y0: -.08, x1: (OX + PW * (.5 + (Math.random() - .5) * .18)) / W, y1: .95, t: 0, D: D.chute * 1.25, rot: (Math.random() - .5) * .5, spin: (Math.random() - .5) * 1, st: 0, ct: 0, cx: 0, cy: 0, ok: false, sz: .3 });
   }
   function spawnTemps() {   // 8 nov. : la fleur du temps, blanche avec une horloge, rend du temps
     tFl++; var sx = manX; kickM = 1; manDir = sx > .5 ? -1 : 1;
@@ -875,7 +878,7 @@
     else { var v = viesInvite(); v.daily += g; ecrire("viesJ", v); viesJ = { daily: v.daily, bonus: 0 }; majVieTxt(); }
   }
   function atterrir(f) {   // 8 nov. : la fleur tombe à un endroit de l'allée (devant ou au fond) : elle arrive à hauteur du panier
-    f.x1 = LARGE ? .05 + Math.random() * .9 : Math.max(.1, Math.min(.9, f.x1));   // ordinateur : les fleurs tombent sur toute la largeur f.fy = FY0 + Math.random() * (FY1 - FY0); f.ech = femEch(f.fy); f.y1 = (f.fy * H - femHaut(f.fy) * .36) / H;
+    f.x1 = (OX + PW * (.5 + (Math.random() - .5) * .18)) / W;   // 21 nov. 2026 : comme à plusieurs : la fleur tombe presque tout droit, dans la zone de la jardinière, au milieu   // ordinateur : les fleurs tombent sur toute la largeur f.fy = FY0 + Math.random() * (FY1 - FY0); f.ech = femEch(f.fy); f.y1 = (f.fy * H - femHaut(f.fy) * .36) / H;
   }
   function posDe(f) {
     var u = Math.min(1, f.t), ex = 1 - (1 - u) * (1 - u), ey = Math.pow(u, 1.3);
@@ -904,7 +907,7 @@
   // ---------- 8 nov. : décors vivants (neige, soleil, oiseaux, citrouilles qui s'allument, feuilles, pétales, lucioles) ----------
   var AMB = { p: [], k: -1, t: 0, sol: { c: 3, d: 0, clin: false }, ois: { on: false, w: 3, x: 0, y: 0, d: 1, i: 0 } };
   var IM_SOL = [img("img/soleil.webp"), img("img/soleil-yeux.webp"), img("img/soleil-clin.webp")], IM_OIS = [img("img/oiseau1.webp"), img("img/oiseau2.webp")], IM_HAL = [1, 2, 3].map(function (i) { return img("img/hallo" + i + ".webp"); });
-  function themeK() { return D ? Math.floor((D.n - 1) / 30) % 10 : -1; }
+  function themeK() { return D ? decorDuMois() : -1; }
   function ambiance(dt) {
     var k = themeK(); if (k < 0 || !enJeu && gerbe < 0 && !fini) { if (!D) return; }
     AMB.t += dt; var T = AMB.t, U = PW / 300;
@@ -1015,7 +1018,7 @@
     if (f.cr) { f.ok = true; cris.got++; kickF = 1; chime(cris.got + 2); bulle("+1 ❤️", "oui", p.x, p.y); return; }
     if (f.spike) { f.ok = false; piquer(p, true); return; }
     if (matche(f.k, D.kinds)) {
-      f.ok = true; f.auPanier = true; kickF = 1; caught++; if (vies < D.vies) vies++; bonSansFaute(); prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
+      f.ok = true; f.auPanier = true; kickF = 1; caught++; D.chute = Math.max(1.1, D.chute * .97); D.every = Math.max(.35, D.every * .97);   /* 21 nov. 2026 : plus on ramasse, plus ça va vite, comme à plusieurs */ if (vies < D.vies) vies++; bonSansFaute(); prises.push(f.k); chime(caught); bulle("+1", "oui", p.x, p.y); majHud();
       if (caught >= D.need) gagne();
     } else { f.ok = false; fautes++; piquer(p, false); }
   }
