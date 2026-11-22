@@ -24,6 +24,9 @@
   #tvLobby .tvEnvs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
   #tvLobby .tvEnvs button { width: 54px; height: 38px; border-radius: 8px; border: 3px solid transparent; background-size: cover; background-position: center; cursor: pointer; padding: 0; }
   #tvLobby .tvEnvs button.ici { border-color: #2faa3a; box-shadow: 0 0 0 2px #fff, 0 0 10px #2faa3a; }
+  #tvLobby .tvNb, .salNb { display: flex; gap: 6px; justify-content: center; margin: 4px 0 8px; }
+  #tvLobby .tvNb button, .salNb button { min-width: 46px; padding: 5px 10px; border-radius: 8px; border: 2px solid rgba(0,0,0,.15); background: #fff; color: #333; font-weight: 800; cursor: pointer; }
+  #tvLobby .tvNb button.ici, .salNb button.ici { border-color: #2faa3a; box-shadow: 0 0 0 2px #fff, 0 0 10px #2faa3a; }
   #tvLobby .tvT { margin-top: 8px; }
   .tvCur { position: fixed; left: 0; top: 0; width: 9vh; height: 9vh; border-radius: 50%; border: 4px solid; z-index: 9800; pointer-events: none; opacity: 0; transition: opacity .3s; }
   .tvCur.vu { opacity: 1; } .tvCur.clic { background: rgba(255,255,255,.45); }
@@ -1414,7 +1417,7 @@
   document.addEventListener("visibilitychange", function () { if (document.hidden && enJeu && !pause && !fini) menu(); });
 
   // ---------- 12 nov. : la télé et les téléphones manettes : seul (le jeu de toujours) ou à 2 ou 3 joueurs (la partie à plusieurs) ----------
-  var PQS = new URLSearchParams(location.search), TV = { on: false, code: "", canal: null, J: [null, null, null], cur: [], solo: -1, fete: null, env: 0 };
+  var PQS = new URLSearchParams(location.search), TV = { on: false, code: "", canal: null, J: [null, null, null], cur: [], solo: -1, fete: null, env: 0, nb: 5 };
   var COULJ = ["#ffd23c", "#ff7ac8", "#5ec8ff"], NOMP = { fr: ["Gauche", "Milieu", "Droite"], en: ["Left", "Middle", "Right"] };
   var FLJ = ["rouge", "jaune", "bleu"], FLJN = { fr: ["rouges", "jaunes", "bleues"], en: ["red", "yellow", "blue"] };   // chaque joueur a sa couleur de fleurs
   var ENVS = ["img/deco0.webp"].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (i) { return "img/th" + pad(i) + ".webp"; }));   // les environnements, au choix pour la partie à plusieurs
@@ -1432,12 +1435,14 @@
     var fr = lang === "fr", L = document.getElementById("tvLobby");
     if (!L) { L = document.createElement("div"); L.id = "tvLobby"; document.body.appendChild(L);
       L.innerHTML = '<button type="button" class="tvX" id="tvX" aria-label="Fermer">×</button><div class="tvPl">' + [0, 1, 2].map(function (k) { return '<div class="tvP" id="tvP' + k + '" style="border-color:' + COULJ[k] + '"><b>' + NOMP[fr ? "fr" : "en"][k] + '</b><div class="tvQ" id="tvQ' + k + '"></div><span id="tvN' + k + '"></span></div>'; }).join("") + '</div>' +
-        '<div class="tvEnvT">' + (fr ? "Environnement de la partie à plusieurs :" : "Scenery for the multiplayer game:") + '</div><div class="tvEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '" style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div><div class="tvT" id="tvT"></div>';
+        '<div class="tvEnvT">' + (fr ? "Environnement de la partie à plusieurs :" : "Scenery for the multiplayer game:") + '</div><div class="tvEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '" style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div><div class="tvEnvT">' + (fr ? "Nombre de manches :" : "Number of rounds:") + '</div><div class="tvNb">' + [5, 10, 15].map(function (v) { return '<button type="button" data-nb="' + v + '">' + v + '</button>'; }).join("") + '</div><div class="tvT" id="tvT"></div>';
       [0, 1, 2].forEach(function (k) { qrDans(document.getElementById("tvQ" + k), location.origin + "/?manette=" + TV.code + "&place=" + k); });
       document.getElementById("tvX").onclick = function (e) { e.stopPropagation(); location.href = "/"; };
-      L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); TV.env = +b.dataset.e; tvLobby(); }; }); }
+      L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); TV.env = +b.dataset.e; tvLobby(); }; });
+      L.querySelectorAll(".tvNb button").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); TV.nb = +b.dataset.nb; tvLobby(); }; }); }
     var n = TV.J.filter(Boolean).length;
     L.querySelectorAll(".tvEnvs button").forEach(function (b) { b.classList.toggle("ici", +b.dataset.e === TV.env); });
+    L.querySelectorAll(".tvNb button").forEach(function (b) { b.classList.toggle("ici", +b.dataset.nb === TV.nb); });
     [0, 1, 2].forEach(function (k) { var j = TV.J[k]; document.getElementById("tvN" + k).textContent = j ? j.pseudo + " · " + (fr ? "fleurs " : "") + FLJN[fr ? "fr" : "en"][k] + (fr ? "" : " flowers") : (fr ? "libre" : "free"); document.getElementById("tvP" + k).classList.toggle("pris", !!j); });
     document.getElementById("tvT").textContent = n === 0 ? (fr ? "Scanne le code de ta place avec ton téléphone" : "Scan your place's code with your phone") : n === 1 ? (fr ? "Seul : touche « Jouer » sur ton téléphone. À 2 ou 3 : les autres scannent leur code." : "Alone: tap “Play” on your phone. 2 or 3 players: the others scan their code.") : (fr ? "Partie à " + n + " : touchez « Jouer » sur un téléphone" : n + " players: tap “Play” on a phone");
   }
@@ -1446,7 +1451,7 @@
     var c = document.getElementById("tvCur" + k); if (!c) { c = document.createElement("div"); c.id = "tvCur" + k; c.className = "tvCur"; c.style.borderColor = COULJ[k]; c.style.boxShadow = "0 0 0 3px rgba(0,0,0,.35), 0 0 18px " + COULJ[k]; document.body.appendChild(c); TV.cur[k] = { x: innerWidth * [.25, .5, .75][k], y: innerHeight * .55 }; }
     var p = TV.cur[k]; var dm = innerHeight * .045; c.style.transform = "translate(" + (p.x - dm) + "px," + (p.y - dm) + "px)"; return c;
   }
-  function tvEtat() { var F = TV.fete; tvEnv("etat", { manche: F ? F.manche : 0, nb: F ? F.NB : 0, J: TV.J.map(function (j, k) { return j ? { pseudo: j.pseudo, perdu: !!j.perdu, score: j.score || 0, vict: F && F.vict ? F.vict[k] || 0 : 0 } : null; }), fete: !!TV.fete, solo: TV.solo, enJeu: enJeu, ecran: !voile.hidden }); }
+  function tvEtat() { var F = TV.fete; tvEnv("etat", { manche: F ? F.manche : 0, nb: F ? F.NB : 0, J: TV.J.map(function (j, k) { return j ? { pseudo: j.pseudo, perdu: !!j.perdu, score: j.score || 0, vict: (j.total || 0) + (j.score || 0) } : null; }), fete: !!TV.fete, solo: TV.solo, enJeu: enJeu, ecran: !voile.hidden }); }
   function tvSurvol() {
     TV.cur.forEach(function (c, k) { if (!c || !TV.J[k] || !c.bouge) return;
       if (TV.fete) feteSurvol(k, c.x, c.y); else if (TV.solo === k && voile.hidden) attraperSous(c.x, c.y, innerHeight * .045); });
@@ -1489,7 +1494,7 @@
   // la partie à plusieurs : chacun son jardinier qui lance, sa jardinière et son panier, sa couleur de fleurs ; une de ses fleurs tombe par terre, et il a perdu ; le dernier qui attrape encore gagne
   var FETE_FOND = null, FLEUR_GAGNE = img("img/fl/rouge-01.webp");
   // ---------- 13 nov. : jouer à distance avec des amis : chacun sur son téléphone, chez lui, dans la même partie ----------
-  var SAL = { on: false, code: "", hote: false, moi: -1, id: Math.random().toString(36).slice(2, 10), J: [null, null, null], env: 0, canal: null };
+  var SAL = { on: false, code: "", hote: false, moi: -1, id: Math.random().toString(36).slice(2, 10), J: [null, null, null], env: 0, nb: 5, canal: null };
   function JJ() { return SAL.on ? SAL.J : TV.J; }
   function salEnv(ev, d) { if (SAL.canal) SAL.canal.send({ type: "broadcast", event: ev, payload: d || {} }); }
   function salPartage() { salEnv("salon", { J: SAL.J.map(function (j) { return j ? { id: j.id, pseudo: j.pseudo } : null; }), env: SAL.env }); }
@@ -1499,9 +1504,9 @@
   }
   function salJuge() {   // le créateur de la partie : le premier qui a ses fleurs gagne la manche, sinon le dernier qui n'a rien fait tomber
     var F = TV.fete; if (!SAL.hote || !F || F.fini || F.go > 0) return;
-    var pl = F.joueurs.filter(function (q) { return SAL.J[q] && !SAL.J[q].parti; }), g = pl.filter(function (q) { return (SAL.J[q].score || 0) >= F.cible; })[0];
+    var pl = F.joueurs.filter(function (q) { return SAL.J[q] && !SAL.J[q].parti; });
     var viv = pl.filter(function (q) { return !SAL.J[q].perdu; }), k = null;
-    if (g !== undefined) k = g; else if (viv.length <= 1 && pl.length >= 2) k = viv.length ? viv[0] : -1; else if (pl.length < 2 && viv.length === 0) k = -1;
+    if (viv.length === 1) F.dernier = viv[0]; if (viv.length === 0) k = F.dernier !== null && F.dernier !== undefined ? F.dernier : -1;   // 21 nov. 2026 : la manche finit quand tout le monde a fait tomber une fleur
     if (k === null) return; salEnv("fin", { k: k, manche: F.manche }); feteFinManche(F, k, performance.now());
   }
   function salQuitter() {
@@ -1524,7 +1529,7 @@
     ch.on("broadcast", { event: "salon" }, function (m) { if (SAL.hote || TV.fete) return; var p = m.payload || {}; SAL.J = p.J || SAL.J; SAL.env = p.env | 0;
       SAL.moi = SAL.J.findIndex(function (j) { return j && j.id === SAL.id; }); vue(); });
     ch.on("broadcast", { event: "ferme" }, function () { if (SAL.hote) return; salQuitter(); ecranSalon(lang === "fr" ? "Le créateur a fermé la partie." : "The host closed the game."); });
-    ch.on("broadcast", { event: "debut" }, function (m) { if (SAL.hote) return; var p = m.payload || {}; SAL.J = p.J || SAL.J; SAL.env = p.env | 0; SAL.moi = SAL.J.findIndex(function (j) { return j && j.id === SAL.id; }); if (SAL.moi >= 0) feteDemarrer(); });
+    ch.on("broadcast", { event: "debut" }, function (m) { if (SAL.hote) return; var p = m.payload || {}; SAL.J = p.J || SAL.J; SAL.env = p.env | 0; SAL.nb = [5, 10, 15].indexOf(p.nb) >= 0 ? p.nb : 5; SAL.moi = SAL.J.findIndex(function (j) { return j && j.id === SAL.id; }); if (SAL.moi >= 0) feteDemarrer(); });
     ch.on("broadcast", { event: "etat" }, function (m) { var p = m.payload || {}, F = TV.fete, j = SAL.J[p.k]; if (!F || !j || p.manche !== F.manche) return; j.score = p.score; j.perdu = !!p.perdu; salJuge(); });
     ch.on("broadcast", { event: "fin" }, function (m) { var p = m.payload || {}, F = TV.fete; if (SAL.hote || !F || p.manche !== F.manche || F.fini) return; feteFinManche(F, p.k, performance.now()); });
     ch.subscribe(function (st) { if (st !== "SUBSCRIBED") return;
@@ -1549,6 +1554,7 @@
     afficher('<h2>' + (fr ? "Jouer à distance" : "Play remotely") + '</h2><p class="petit">' + (fr ? "Code de la partie" : "Game code") + '</p><div class="scode"><b>' + SAL.code + '</b><button class="mini" id="salP" type="button">' + t("share") + '</button></div>' +
       '<div class="classement" id="salJ">' + pl + '</div>' +
       (SAL.hote ? '<p class="petit">' + (fr ? "Environnement" : "Scenery") + '</p><div class="salEnvs">' + ENVS.map(function (src, i) { return '<button type="button" data-e="' + i + '"' + (SAL.env === i ? ' class="ici"' : '') + ' style="background-image:url(\'' + src + '\')"></button>'; }).join("") + '</div>' +
+        '<p class="petit">' + (fr ? "Nombre de manches" : "Number of rounds") + '</p><div class="salNb">' + [5, 10, 15].map(function (v) { return '<button type="button" data-nb="' + v + '"' + (SAL.nb === v ? ' class="ici"' : '') + '>' + v + '</button>'; }).join("") + '</div>' +
         '<button class="gros-bouton" id="salGo" type="button"' + (n < 2 ? ' disabled style="opacity:.5"' : '') + '>' + (fr ? "Commencer" : "Start") + '</button>'
         : '<p class="petit">' + (SAL.moi >= 0 ? (fr ? "En attente du créateur de la partie…" : "Waiting for the host…") : (fr ? "Connexion à la partie…" : "Joining the game…")) + '</p>') +
       '<button class="slien" id="ret" type="button">' + (fr ? "Quitter la partie" : "Leave the game") + '</button>');
@@ -1558,9 +1564,10 @@
       if (navigator.share) { navigator.share({ text: txt, url: lien }).catch(function () {}); return; }
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt + " " + lien).then(function () { sp.textContent = t("copied"); }, function () {}); };
     document.querySelectorAll(".salEnvs button").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); SAL.env = +b.dataset.e; salPartage(); ecranSalon(); }; });
+    document.querySelectorAll(".salNb button").forEach(function (b) { b.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); b.onclick = function (e) { e.stopPropagation(); SAL.nb = +b.dataset.nb; ecranSalon(); }; });
     var go = document.getElementById("salGo");
     if (go) { go.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); go.onclick = function (e) { e.stopPropagation(); if (SAL.J.filter(Boolean).length < 2) return;
-      SAL.J.forEach(function (j) { if (j) { j.parti = false; j.perdu = false; j.score = 0; } }); salEnv("debut", { J: SAL.J.map(function (j) { return j ? { id: j.id, pseudo: j.pseudo } : null; }), env: SAL.env }); feteDemarrer(); }; }
+      SAL.J.forEach(function (j) { if (j) { j.parti = false; j.perdu = false; j.score = 0; } }); salEnv("debut", { J: SAL.J.map(function (j) { return j ? { id: j.id, pseudo: j.pseudo } : null; }), env: SAL.env, nb: SAL.nb }); feteDemarrer(); }; }
   }
   function feteDemarrer() {
     var pl = [0, 1, 2].filter(function (k) { return JJ()[k]; }), n = pl.length, cvF = document.getElementById("fete");
@@ -1570,23 +1577,25 @@
       fx.onclick = function (e) { e.stopPropagation(); salQuitter(); ecranSalon(); }; }
     FETE_FOND = img(ENVS[SAL.on ? SAL.env : TV.env] || ENVS[0]);
     cvF.hidden = false; if (TV.on) tvLobbyVu(false); enJeu = false; voile.hidden = true; document.getElementById("feteX").hidden = !SAL.on;
-    var F = TV.fete = { cv: cvF, g: cvF.getContext("2d"), dern: performance.now(), manche: 0, NB: NB_MANCHES, vict: {}, cols: [], joueurs: pl };
-    pl.forEach(function (k) { F.vict[k] = 0; });
+    var F = TV.fete = { cv: cvF, g: cvF.getContext("2d"), dern: performance.now(), manche: 0, NB: SAL.on ? SAL.nb : TV.nb, vict: {}, cols: [], joueurs: pl };
+    pl.forEach(function (k) { F.vict[k] = 0; if (JJ()[k]) JJ()[k].total = 0; });
     feteManche(F, SAL.on ? [SAL.moi] : pl);
     tvEtat(); requestAnimationFrame(feteBoucle);
   }
-  var NB_MANCHES = 5;   // 12 nov. : une partie = 5 manches ; on peut perdre une manche et continuer ; à la fin, celui qui a gagné le plus de manches gagne
+  // 21 nov. 2026 : une partie = 5, 10 ou 15 manches (au choix). Dans une manche, chacun ramasse ses fleurs ; dès qu'une de ses fleurs tombe, c'est fini pour lui.
+  // Quand la dernière a fait tomber une fleur, on passe à la manche suivante. À la fin, celui qui a ramassé le plus de fleurs en tout gagne la partie.
   function feteManche(F, pl) {
     pl = pl || F.cols.map(function (c) { return c.k; }); var n = pl.length; F.manche++; F.t0 = performance.now(); F.fini = 0; F.fl = []; F.go = 3; F.finPartie = false;
-    F.cible = 10 + 2 * (F.manche - 1);   // le nombre de fleurs à réunir pour gagner la manche : 10, puis 2 de plus à chaque manche
+    F.dernier = null;
     F.joueurs.forEach(function (k) { var j = JJ()[k]; if (j) { j.perdu = !!(F.bataille && F.bataille.indexOf(k) < 0) || !!j.parti; j.score = 0; j.faux = 0; } });
     F.cols = pl.map(function (k, i) { return { k: k, i: i, n: n, prochain: 1.2 + i * .35, D: 3.6, tous: 1.6, lance: 0, panier: [], pb: null }; });
   }
   window.IFL_DBG.ffm = function (k) { feteFinManche(TV.fete, k, performance.now()); }; Object.defineProperty(window.IFL_DBG, "sal", { get: function () { return SAL; } });
   function feteFinManche(F, k, now) {
-    if (F.fini) return; F.fini = now; F.gagnant = k; F.temps = Math.max(0, (now - F.t0) / 1000 - 3); if (k >= 0) { F.vict[k]++; F.trophees = F.trophees || []; F.trophees.push({ k: k, n: F.vict[k], t0: now }); }   // une grosse fleur rouge vient se poser en haut de sa place
+    if (F.fini) return; F.fini = now; F.gagnant = k; F.temps = Math.max(0, (now - F.t0) / 1000 - 3);
+    F.joueurs.forEach(function (q) { var jq = JJ()[q]; if (jq) { jq.total = (jq.total || 0) + (jq.score || 0); jq.score = 0; } });   // les fleurs de la manche s'ajoutent au total
     bip(523, .12, "triangle", .08); setTimeout(function () { bip(659, .12, "triangle", .08); }, 120); setTimeout(function () { bip(784, .2, "triangle", .08); }, 240);
-    if (F.manche >= F.NB) { var bv = -1, ex = []; F.joueurs.forEach(function (q) { if (JJ()[q] && JJ()[q].parti) return; var v = F.vict[q] || 0; if (v > bv) { bv = v; ex = [q]; } else if (v === bv) ex.push(q); });
+    if (F.manche >= F.NB) { var bv = -1, ex = []; F.joueurs.forEach(function (q) { if (JJ()[q] && JJ()[q].parti) return; var v = JJ()[q] ? JJ()[q].total || 0 : 0; if (v > bv) { bv = v; ex = [q]; } else if (v === bv) ex.push(q); });
       if (ex.length === 1) { F.finPartie = true; F.champion = ex[0]; F.bataille = null; } else F.bataille = ex; }   // égalité : les ex-aequo font une bataille, jusqu'à ce qu'il y ait un seul gagnant
     tvEtat();
   }
@@ -1605,7 +1614,7 @@
     var j = JJ()[k]; if (!j || j.perdu) return;
     if (best.k !== k) { bip(1400, .07, "sine", .05); j.faux = (j.faux || 0) + 1; if (j.faux >= 3) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); } return; }   // pas sa fleur : un petit « ping » ; à la 3e, il perd la manche
     best.pris = true; best.pt = 0; best.px = best.x; best.py = best.y; j.score++; chime(j.score % 8 + 1);
-    if (SAL.on) salEtat(); else if (j.score >= F.cible) feteFinManche(F, k, performance.now());   // le premier qui a réuni ses fleurs gagne la manche
+    if (SAL.on) salEtat();
     var c = F.cols.filter(function (q) { return q.k === k; })[0]; c.D = Math.max(1.1, c.D - .08); c.tous = Math.max(.5, c.tous - .04);   // plus on en ramasse, plus ça va vite
   }
   function feteBoucle(now) {
@@ -1623,7 +1632,8 @@
         F.fl.push({ k: c.k, im: im, x0: col.x, y0: hautM + H2 * .1, x1: col.x + (Math.random() - .5) * col.w * .55, t: 0, D: c.D, h: h, rot: (Math.random() - .5) * .6, x: col.x, y: hautM }); } });
       F.fl.forEach(function (f) { if (f.pris || f.tombe) return; f.t += dt / f.D; var u = Math.min(1, f.t); f.x = f.x0 + (f.x1 - f.x0) * u + Math.sin(f.t * 5) * 6; f.y = f.y0 + (sol - f.y0) * Math.pow(u, 1.25);
         if (u >= 1) { f.tombe = true; var j = JJ()[f.k]; if (j && !j.perdu) { j.perdu = true; bip(190, .3, "sawtooth", .07, 110); if (SAL.on) salEtat(); } } });
-      if (!SAL.on && vivants.length <= 1 && F.cols.length >= 2) feteFinManche(F, vivants.length ? vivants[0].k : -1, now);   // le dernier qui n'a rien fait tomber gagne la manche
+      if (vivants.length === 1) F.dernier = vivants[0].k;
+      if (!SAL.on && vivants.length === 0) feteFinManche(F, F.dernier !== null ? F.dernier : -1, now);   // 21 nov. 2026 : la manche finit quand la dernière a fait tomber une fleur
     }
     // les jardiniers en haut, les jardinières en bas
     F.cols.forEach(function (c) { var col = feteCol(c, W2), j = JJ()[c.k], perdu = j && j.perdu; c.lance = Math.max(0, c.lance - dt);
@@ -1634,10 +1644,10 @@
       c.panier.slice(-10).forEach(function (im, q, a) { if (!im.naturalWidth) return; var h2 = H2 * .045, w2 = h2 * im.naturalWidth / im.naturalHeight, an = a.length > 1 ? -.6 + 1.2 * q / (a.length - 1) : 0; g.save(); g.translate(c.pb.x + Math.sin(an) * H2 * .025, c.pb.y - H2 * .01); g.rotate(an * .6); feteDessine(g, im, -w2 / 2, -h2, w2, h2); g.restore(); });
       g.restore();
       g.save(); g.font = "800 " + Math.round(Math.min(H2 * .03, W2 * .05)) + "px Nunito, system-ui, sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = COULJ[c.k];
-      var lab = (j ? j.pseudo : "") + " · " + (j ? j.score : 0) + "/" + F.cible; g.strokeText(lab, col.x, H2 * .045); g.fillText(lab, col.x, H2 * .045);
-      if (perdu) { g.font = "900 " + Math.round(H2 * .06) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(fr ? "Perdu" : "Out", col.x, H2 * .5); g.fillText(fr ? "Perdu" : "Out", col.x, H2 * .5); }
+      var lab = (j ? j.pseudo : "") + " · " + (j ? (j.total || 0) + (j.score || 0) : 0) + (fr ? " fleurs" : " flowers"); g.strokeText(lab, col.x, H2 * .045); g.fillText(lab, col.x, H2 * .045);
+      if (perdu && !F.finPartie) { g.font = "900 " + Math.round(H2 * .06) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(fr ? "Perdu" : "Out", col.x, H2 * .5); g.fillText(fr ? "Perdu" : "Out", col.x, H2 * .5); }
       g.restore(); });
-    if (SAL.on) { var aut = F.joueurs.filter(function (q) { return q !== SAL.moi && SAL.J[q]; }).map(function (q) { var jq = SAL.J[q]; return jq.pseudo + " " + (jq.perdu ? (fr ? "perdu" : "out") : (jq.score || 0) + "/" + F.cible) + " ★" + (F.vict[q] || 0); }).join("   ·   ");   // les amis à distance : où ils en sont
+    if (SAL.on) { var aut = F.joueurs.filter(function (q) { return q !== SAL.moi && SAL.J[q]; }).map(function (q) { var jq = SAL.J[q]; return jq.pseudo + " " + ((jq.total || 0) + (jq.score || 0)) + (fr ? " fleurs" : " flowers") + (jq.perdu ? (fr ? " · perdu" : " · out") : ""); }).join("   ·   ");   // les amis à distance : où ils en sont
       if (aut) { g.save(); g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.55)"; g.fillStyle = "#fff"; g.font = "800 " + Math.round(Math.min(H2 * .026, W2 * .042)) + "px Nunito, system-ui, sans-serif"; g.strokeText(aut, W2 / 2, H2 * .19); g.fillText(aut, W2 / 2, H2 * .19); g.restore(); } }
     // les manches gagnées : une grosse fleur rouge par manche, en haut de la place du gagnant
     (F.trophees || []).forEach(function (tr) { var c = F.cols.filter(function (q) { return q.k === tr.k; })[0]; if (!c) return; var col = feteCol(c, W2), im = FLEUR_GAGNE; if (!im.naturalWidth) return;
@@ -1655,11 +1665,11 @@
     g.strokeText(cr, W2 / 2, H2 * .1); g.fillText(cr, W2 / 2, H2 * .1);
     g.font = "800 " + Math.round(H2 * .028) + "px Nunito, system-ui, sans-serif"; var mt = F.manche > F.NB ? (fr ? "Bataille !" : "Tie-break!") : (fr ? "Manche " : "Round ") + F.manche + " / " + F.NB; g.strokeText(mt, W2 / 2, H2 * .145); g.fillText(mt, W2 / 2, H2 * .145); g.font = "900 " + Math.round(H2 * .04) + "px Nunito, system-ui, sans-serif";
     if (F.go > 0) { g.font = "900 " + Math.round(H2 * .2) + "px Nunito, system-ui, sans-serif"; var gv = String(Math.ceil(F.go)); g.strokeText(gv, W2 / 2, H2 * .55); g.fillText(gv, W2 / 2, H2 * .55); }
-    if (F.fini) { var gj = JJ()[F.gagnant], txt = (F.manche > F.NB ? (fr ? "Bataille" : "Tie-break") : (fr ? "Manche " : "Round ") + F.manche) + " : " + (gj ? gj.pseudo + (fr ? " gagne · " : " wins · ") + cr : (fr ? "personne" : "nobody"));
+    if (F.fini) { var gj = JJ()[F.gagnant], txt = (F.manche > F.NB ? (fr ? "Bataille" : "Tie-break") : (fr ? "Manche " : "Round ") + F.manche) + " : " + (gj ? gj.pseudo + (fr ? " tient le plus longtemps · " : " lasts the longest · ") + cr : (fr ? "fin" : "over"));
       g.font = "900 " + Math.round(Math.min(H2 * .055, W2 * .055)) + "px Nunito, system-ui, sans-serif"; g.fillStyle = gj ? COULJ[F.gagnant] : "#fff"; g.strokeText(txt, W2 / 2, H2 * .38); g.fillText(txt, W2 / 2, H2 * .38);
       if (F.bataille && !F.finPartie) { var tb = (fr ? "Égalité ! Bataille : " : "Tie! Tie-break: ") + F.bataille.map(function (q) { return JJ()[q] ? JJ()[q].pseudo : ""; }).join(fr ? " contre " : " vs ");
         g.font = "900 " + Math.round(Math.min(H2 * .06, W2 * .05)) + "px Nunito, system-ui, sans-serif"; g.fillStyle = "#fff"; g.strokeText(tb, W2 / 2, H2 * .5); g.fillText(tb, W2 / 2, H2 * .5); }
-      if (F.finPartie) { var cj = JJ()[F.champion], t2 = cj ? cj.pseudo + (fr ? " gagne la partie ! (" : " wins the game! (") + F.vict[F.champion] + (fr ? " manches)" : " rounds)") : (fr ? "Égalité !" : "It's a tie!");
+      if (F.finPartie) { var cj = JJ()[F.champion], t2 = cj ? cj.pseudo + (fr ? " gagne la partie ! (" : " wins the game! (") + (cj.total || 0) + (fr ? " fleurs)" : " flowers)") : (fr ? "Égalité !" : "It's a tie!");
         g.font = "900 " + Math.round(Math.min(H2 * .075, W2 * .06)) + "px Nunito, system-ui, sans-serif"; g.fillStyle = cj ? COULJ[F.champion] : "#fff"; g.strokeText(t2, W2 / 2, H2 * .5); g.fillText(t2, W2 / 2, H2 * .5); }
       else if (now - F.fini > 3500) { feteManche(F); tvEtat(); }   // manche suivante
       if (F.finPartie && now - F.fini > 8000) { F.cv.hidden = true; TV.fete = null; JJ().forEach(function (j) { if (j) j.perdu = false; }); document.getElementById("feteX").hidden = true;
@@ -1683,7 +1693,7 @@
     canal.on("broadcast", { event: "tv" }, rejoindre);
     canal.on("broadcast", { event: "etat" }, function (x) { var e = x.payload || {}, j = (e.J || [])[place]; vu = Date.now(); if (!j) { rejoindre(); return; }
       var n = (e.J || []).filter(Boolean).length;
-      document.getElementById("mInfo").innerHTML = e.fete ? (fr ? "Manche " : "Round ") + e.manche + "/" + e.nb + " · ★ " + j.vict + "<br>" + (j.perdu ? (fr ? "Perdu · " : "Out · ") : "") + j.score + (fr ? " fleurs" : " flowers") : e.solo === place ? (fr ? "Tu joues seul" : "You play alone") : (n >= 2 ? (fr ? "Partie à " + n + " joueurs" : n + " players") : (fr ? "Prêt" : "Ready"));
+      document.getElementById("mInfo").innerHTML = e.fete ? (fr ? "Manche " : "Round ") + e.manche + "/" + e.nb + " · " + j.vict + (fr ? " fleurs en tout" : " flowers in all") + "<br>" + (j.perdu ? (fr ? "Perdu · " : "Out · ") : "") + j.score + (fr ? " fleurs" : " flowers") : e.solo === place ? (fr ? "Tu joues seul" : "You play alone") : (n >= 2 ? (fr ? "Partie à " + n + " joueurs" : n + " players") : (fr ? "Prêt" : "Ready"));
       document.getElementById("mJouer").hidden = !!e.fete || (e.solo === place && !e.ecran); });
     canal.subscribe(function (st) { if (st === "SUBSCRIBED") rejoindre(); });
     setInterval(function () { if (!vu || Date.now() - vu > 4000) rejoindre(); else env("ping"); }, 3000);
